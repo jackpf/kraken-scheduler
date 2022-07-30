@@ -17,6 +17,7 @@ func main() {
 		Key        string `arg:"required"`
 		Secret     string `arg:"required"`
 		ConfigFile string `arg:"-f,--file,required"`
+		Validate   bool   `default:"true"` // TODO Change to something positive
 	}
 	arg.MustParse(&args)
 
@@ -28,7 +29,7 @@ func main() {
 
 	api := krakenapi.New(args.Key, args.Secret)
 	notifier := notifier.MustNewGMailer("credentials.json", "me")
-	scheduler := scheduler.NewScheduler(*appConfig, api, notifier)
+	scheduler := scheduler.NewScheduler(*appConfig, args.Validate, api, notifier)
 
 	scheduler.Run()
 }
