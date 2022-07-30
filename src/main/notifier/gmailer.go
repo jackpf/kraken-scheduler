@@ -81,6 +81,16 @@ func getOrCreateToken(config *oauth2.Config) *oauth2.Token {
 	return token
 }
 
+func MustNewGMailer(credentialsFile string, userId string) *GMailer {
+	gmailer, err := NewGMailer(credentialsFile, userId)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return gmailer
+}
+
 func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
 	ctx := context.Background()
 
