@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/jackpf/kraken-schedule/src/main/config"
-	scheduler "github.com/jackpf/kraken-schedule/src/main/scheduler"
+	"github.com/jackpf/kraken-schedule/src/main/scheduler"
 
 	"github.com/jackpf/kraken-schedule/src/main/notifier"
 
