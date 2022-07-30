@@ -94,7 +94,7 @@ func (s Scheduler) submitOrder(order model.Order) error { // TODO Retry
 		validateLogTag = "TEST"
 	}
 
-	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.Amount(), order.Pair, order.Price)
+	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.FiatAmount(), order.Pair, order.Price)
 
 	data := map[string]string{}
 	if s.validate {
@@ -122,7 +122,7 @@ func (s Scheduler) notifyOrder(order model.Order) error {
 	if s.validate {
 		validateLogTag = "TEST"
 	}
-	message := fmt.Sprintf("[%s] Ordered %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.Amount(), order.Pair, order.Price)
+	message := fmt.Sprintf("[%s] Ordered %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
 
 	return s.notifier.Send(s.config.NotifyEmailAddress, "kraken-scheduler: Purchase", message)
 }
