@@ -5,16 +5,16 @@ import (
 	"strings"
 )
 
-func NewOrderNotification(isLive bool, pair string, amount float32, orderPrice float32, assetPrice float32, transactionIds []string) OrderNotification {
+func NewOrderNotification(isLive bool, pair string, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) OrderNotification {
 	return OrderNotification{isLive: isLive, pair: pair, amount: amount, orderPrice: orderPrice, assetPrice: assetPrice, transactionIds: transactionIds}
 }
 
 type OrderNotification struct {
 	isLive         bool
 	pair           string
-	amount         float32
-	orderPrice     float32
-	assetPrice     float32
+	amount         float64
+	orderPrice     float64
+	assetPrice     float64
 	transactionIds []string
 }
 

@@ -11,7 +11,7 @@ import (
 )
 
 type Api interface {
-	FormatAmount(amount float32) string
+	FormatAmount(amount float64) string
 	CreateOrder(schedule configmodel.Schedule) (*model.Order, error)
 	ValidateOrder(order model.Order) error
 	SubmitOrder(order model.Order) ([]string, error)
@@ -33,7 +33,7 @@ type ApiImpl struct {
 	krakenAPI KrakenApiInterface
 }
 
-func (a ApiImpl) getCurrentPrice(pair string) (*float32, error) {
+func (a ApiImpl) getCurrentPrice(pair string) (*float64, error) {
 	tickerResult, err := a.krakenAPI.Ticker(pair)
 
 	if err != nil {
@@ -55,12 +55,12 @@ func (a ApiImpl) getCurrentPrice(pair string) (*float32, error) {
 		return nil, err
 	}
 
-	price32 := float32(price)
+	price32 := price
 
 	return &price32, nil
 }
 
-func (a ApiImpl) FormatAmount(amount float32) string {
+func (a ApiImpl) FormatAmount(amount float64) string {
 	return fmt.Sprintf("%.8f", amount)
 }
 

@@ -1,15 +1,15 @@
 package model
 
-func NewOrder(pair string, price float32, fiatAmount float32) Order {
+func NewOrder(pair string, price float64, fiatAmount float64) Order {
 	return Order{Pair: pair, Price: price, FiatAmount: fiatAmount}
 }
 
 type Order struct {
 	Pair       string
-	Price      float32
-	FiatAmount float32
+	Price      float64
+	FiatAmount float64
 }
 
-func (o Order) Amount() float32 {
+func (o Order) Amount() float64 {
 	return o.FiatAmount / o.Price
 }

@@ -42,16 +42,16 @@ func TestApi_FormatAmount(t *testing.T) {
 	krakenAPI := new(MockKrakenApi)
 	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, true, krakenAPI)
 
-	result := api.FormatAmount(12.3456789)
+	result := api.FormatAmount(12.34567891011)
 
-	assert.Equal(t, "12.3457", result)
+	assert.Equal(t, "12.34567891", result)
 }
 
 func TestApi_CreateOrder(t *testing.T) {
 	krakenAPI := new(MockKrakenApi)
 	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, true, krakenAPI)
 
-	price := float32(246.0)
+	price := 246.0
 	pair := "XXBTZEUR" // Must be a real pair due to reflection use
 
 	krakenAPI.On("Ticker", []string{pair}).Return(&krakenapi.TickerResponse{
@@ -62,9 +62,9 @@ func TestApi_CreateOrder(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, pair, order.Pair)
-	assert.Equal(t, float32(123.0), order.FiatAmount)
+	assert.Equal(t, 123.0, order.FiatAmount)
 	assert.Equal(t, price, order.Price)
-	assert.Equal(t, float32(0.5), order.Amount())
+	assert.Equal(t, 0.5, order.Amount())
 }
 
 func TestApi_ValidateOrder(t *testing.T) {
@@ -84,7 +84,7 @@ func TestApi_SubmitOrder(t *testing.T) {
 
 	order := model.NewOrder("test-pair", 123.0, 246.0)
 	transactionIds := []string{"1", "2"}
-	krakenAPI.On("AddOrder", order.Pair, "buy", "market", "2.0000", map[string]string{}).Return(
+	krakenAPI.On("AddOrder", order.Pair, "buy", "market", "2.00000000", map[string]string{}).Return(
 		&krakenapi.AddOrderResponse{TransactionIds: transactionIds},
 		nil,
 	)
@@ -101,7 +101,7 @@ func TestApi_SubmitOrder_NotLive(t *testing.T) {
 
 	order := model.NewOrder("test-pair", 123.0, 246.0)
 	transactionIds := []string{"1", "2"}
-	krakenAPI.On("AddOrder", order.Pair, "buy", "market", "2.0000", map[string]string{"validate": "true"}).Return(
+	krakenAPI.On("AddOrder", order.Pair, "buy", "market", "2.00000000", map[string]string{"validate": "true"}).Return(
 		&krakenapi.AddOrderResponse{TransactionIds: transactionIds},
 		nil,
 	)
