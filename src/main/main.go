@@ -1,7 +1,7 @@
 package main
 
 import (
-	api2 "github.com/jackpf/kraken-schedule/src/main/api"
+	"github.com/jackpf/kraken-schedule/src/main/api"
 	"github.com/jackpf/kraken-schedule/src/main/config"
 	"github.com/jackpf/kraken-schedule/src/main/scheduler"
 	log "github.com/sirupsen/logrus"
@@ -40,8 +40,8 @@ func main() {
 	} else {
 		log.Warn("--credentials not set, notifications are disabled")
 	}
-	api := api2.NewApi(*appConfig, args.IsLive, krakenAPI)
-	schedulerInstance := scheduler.NewScheduler(*appConfig, api, notifierInstance)
+	apiInstance := api.NewApi(*appConfig, args.IsLive, krakenAPI)
+	schedulerInstance := scheduler.NewScheduler(*appConfig, apiInstance, notifierInstance)
 
 	schedulerInstance.Run()
 }
