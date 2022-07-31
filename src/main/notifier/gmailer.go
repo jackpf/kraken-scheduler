@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -67,11 +68,11 @@ func saveToken(path string, token *oauth2.Token) {
 }
 
 // Retrieve a token, saves the token
-func getOrCreateToken(config *oauth2.Config) *oauth2.Token {
+func getOrCreateToken(config *oauth2.Config, path string) *oauth2.Token {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokenFile := "token.json"
+	tokenFile := fmt.Sprintf("%s/%s", path, "token.json")
 	token, err := tokenFromFile(tokenFile)
 	if err != nil {
 		token = tokenFromWeb(config)
@@ -107,7 +108,13 @@ func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
 		return nil, err
 	}
 
-	token := getOrCreateToken(config)
+	credentialsFilePathAbsolute, err := filepath.Abs(credentialsFile)
+	if err != nil {
+		return nil, err
+	}
+	credentialsFilePathDir := filepath.Dir(credentialsFilePathAbsolute)
+
+	token := getOrCreateToken(config, credentialsFilePathDir)
 	client := config.Client(ctx, token)
 
 	service, err := gmail.NewService(ctx, option.WithHTTPClient(client))
