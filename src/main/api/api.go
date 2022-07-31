@@ -15,6 +15,7 @@ type Api interface {
 	CreateOrder(schedule configmodel.Schedule) (*model.Order, error)
 	ValidateOrder(order model.Order) error
 	SubmitOrder(order model.Order) ([]string, error)
+	TransactionStatus(transactionId string) (*krakenapi.Order, error)
 	IsLive() bool
 }
 
@@ -96,6 +97,25 @@ func (a ApiImpl) SubmitOrder(order model.Order) ([]string, error) { // TODO Retr
 	}
 
 	return orderResponse.TransactionIds, nil
+}
+
+func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, error) {
+	openOrders, err := a.krakenAPI.OpenOrders(map[string]string{})
+	if err != nil {
+		return nil, err
+	}
+	closedOrders, err := a.krakenAPI.ClosedOrders(map[string]string{})
+	if err != nil {
+		return nil, err
+	}
+
+	if order, isOpen := openOrders.Open[transactionId]; isOpen {
+		return &order, nil
+	} else if _, isClosed := closedOrders.Closed[transactionId]; isClosed {
+		return nil, nil
+	} else {
+		return nil, fmt.Errorf("transaction %s could not be found in open or closed order history", transactionId)
+	}
 }
 
 func (a ApiImpl) IsLive() bool {

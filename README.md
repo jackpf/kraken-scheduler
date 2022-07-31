@@ -18,7 +18,7 @@ for incorrectly placed orders.
 ## Prerequisites
 
 - You must create a Kraken API key to run the scheduler, see https://support.kraken.com/hc/en-us/articles/360000919966-How-to-generate-an-API-key-pair-
-- Required permissions are `Query funds`, `Query open orders & trades` and `Create and modify orders` for the application to run correctly
+- Required permissions are `Query funds`, `Query open orders & trades`, `Query closed orders & trades` and `Create and modify orders` for the application to run correctly
 - In order to receive email notifications, you must create your own GMail OAuth credentials, see https://developers.google.com/identity/protocols/oauth2
 
 ## Building
