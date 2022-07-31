@@ -29,7 +29,7 @@ func main() {
 	}
 
 	if !args.IsLive {
-		log.Warn("Running in test mode, run with --live to submit real orders\n")
+		log.Warn("Running in test mode, run with --live to submit real orders")
 	}
 
 	krakenAPI := krakenapi.New(args.Key, args.Secret)
@@ -38,7 +38,7 @@ func main() {
 		var gmailer notifier.Notifier = notifier.MustNewGMailer(args.CredentialsFile, "me")
 		notifierInstance = &gmailer
 	} else {
-		log.Warn("--credentials not set, notifications are disabled\n")
+		log.Warn("--credentials not set, notifications are disabled")
 	}
 	apiInstance := api.NewApi(*appConfig, args.IsLive, krakenAPI)
 	schedulerInstance := scheduler.NewScheduler(*appConfig, apiInstance, notifierInstance)

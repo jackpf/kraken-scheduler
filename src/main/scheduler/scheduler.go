@@ -47,7 +47,7 @@ func (s Scheduler) liveLogTag() string {
 
 func (s Scheduler) notifyOrder(order model.Order, transactionIds []string) error {
 	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
-		log.Warn("Notifications not configured, not notifying\n")
+		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
 
@@ -65,7 +65,7 @@ func (s Scheduler) notifyOrder(order model.Order, transactionIds []string) error
 
 func (s Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
 	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
-		log.Warn("Notifications not configured, not notifying\n")
+		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
 
@@ -83,14 +83,14 @@ func (s Scheduler) notifyCompletedTrade(order model.Order, completedOrder kraken
 func (s Scheduler) process(schedule configmodel.Schedule) {
 	order, err := s.api.CreateOrder(schedule)
 	if err != nil {
-		log.Errorf("Unable to create order: %s\n", err.Error())
+		log.Errorf("Unable to create order: %s", err.Error())
 		return
 	}
 
-	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...\n", s.liveLogTag(), s.api.FormatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
+	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", s.liveLogTag(), s.api.FormatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
 	transactionIds, err := s.api.SubmitOrder(*order)
 	if err != nil {
-		log.Errorf("Unable to submit order: %s\n", err.Error())
+		log.Errorf("Unable to submit order: %s", err.Error())
 		return
 	}
 
@@ -99,11 +99,11 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 		transactionIdsString = "<no transaction IDs for test orders>"
 	}
 
-	log.Infof("[%s] Order placed: %s\n", s.liveLogTag(), transactionIdsString)
+	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
 
 	err = s.notifyOrder(*order, transactionIds)
 	if err != nil {
-		log.Errorf("Unable to notify of order: %s\n", err.Error())
+		log.Errorf("Unable to notify of order: %s", err.Error())
 	}
 
 	for _, transactionId := range transactionIds {
@@ -111,19 +111,19 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 			completedOrder, err := s.api.TransactionStatus(transactionId)
 
 			if err != nil {
-				log.Errorf("Unable to check transaction status: %s\n", err.Error())
+				log.Errorf("Unable to check transaction status: %s", err.Error())
 			}
 
 			if completedOrder != nil {
-				log.Infof("Order %s was successfully completed\n", transactionId)
+				log.Infof("Order %s was successfully completed", transactionId)
 
 				err = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
 				if err != nil {
-					log.Errorf("Unable to notify of completed order: %s\n", err.Error())
+					log.Errorf("Unable to notify of completed order: %s", err.Error())
 				}
 				break
 			} else {
-				log.Infof("Order %s is pending...\n", transactionId)
+				log.Infof("Order %s is pending...", transactionId)
 				time.Sleep(1 * time.Second)
 			}
 		}
@@ -158,7 +158,7 @@ func (s Scheduler) Run() {
 				log.Fatalf("Unable to create cron schedule: %s", err.Error())
 			}
 
-			log.Infof("Created cron schedule for %s\n", schedule.Pair)
+			log.Infof("Created cron schedule for %s", schedule.Pair)
 		}
 
 		s.cron.StartBlocking()
