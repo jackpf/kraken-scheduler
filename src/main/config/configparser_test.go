@@ -24,7 +24,7 @@ func TestParseConfigValid(t *testing.T) {
 
 	assert.Equal(t, "email@address.com", config.NotifyEmailAddress)
 	assert.Len(t, config.Schedules, 1)
-	assert.Equal(t, config.Schedules[0].Cron, "* * * * *")
-	assert.Equal(t, config.Schedules[0].Pair, "XXBTZEUR")
-	assert.Equal(t, config.Schedules[0].Amount, float32(40.00))
+	assert.Equal(t, "* * * * *", config.Schedules[0].Cron)
+	assert.Equal(t, "XXBTZEUR", config.Schedules[0].Pair)
+	assert.Equal(t, float32(40.00), config.Schedules[0].Amount)
 }

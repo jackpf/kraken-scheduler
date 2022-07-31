@@ -1,6 +1,7 @@
 package main
 
 import (
+	api2 "github.com/jackpf/kraken-schedule/src/main/api"
 	"github.com/jackpf/kraken-schedule/src/main/config"
 	"github.com/jackpf/kraken-schedule/src/main/scheduler"
 	log "github.com/sirupsen/logrus"
@@ -31,7 +32,7 @@ func main() {
 		log.Warn("Running in test mode, run with `--live true` to submit real orders")
 	}
 
-	api := krakenapi.New(args.Key, args.Secret)
+	krakenAPI := krakenapi.New(args.Key, args.Secret)
 	var notifierInstance *notifier.Notifier
 	if args.CredentialsFile != "" {
 		var gmailer notifier.Notifier = notifier.MustNewGMailer(args.CredentialsFile, "me")
@@ -39,7 +40,8 @@ func main() {
 	} else {
 		log.Warn("--credentials not set, notifications are disabled")
 	}
-	schedulerInstance := scheduler.NewScheduler(*appConfig, args.IsLive, api, notifierInstance)
+	api := api2.NewApi(*appConfig, args.IsLive, krakenAPI)
+	schedulerInstance := scheduler.NewScheduler(*appConfig, api, notifierInstance)
 
 	schedulerInstance.Run()
 }
