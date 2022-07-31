@@ -94,7 +94,7 @@ func (s Scheduler) submitOrder(order model.Order) error { // TODO Retry
 		validateLogTag = "TEST"
 	}
 
-	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.FiatAmount(), order.Pair, order.Price)
+	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
 
 	data := map[string]string{}
 	if s.validate {
