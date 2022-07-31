@@ -29,7 +29,7 @@ func main() {
 	}
 
 	if !args.IsLive {
-		log.Warn("Running in test mode, run with `--live true` to submit real orders")
+		log.Warn("Running in test mode, run with --live to submit real orders")
 	}
 
 	krakenAPI := krakenapi.New(args.Key, args.Secret)

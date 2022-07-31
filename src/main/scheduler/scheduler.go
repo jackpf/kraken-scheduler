@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackpf/kraken-schedule/src/main/notificationtemplates"
+
 	"github.com/jackpf/kraken-schedule/src/main/api"
 
 	"github.com/jackpf/kraken-schedule/src/main/scheduler/model"
@@ -22,20 +24,18 @@ import (
 
 func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.Notifier) Scheduler {
 	return Scheduler{
-		config:          appConfig,
-		api:             api,
-		refreshInterval: 1 * time.Minute,
-		cron:            gocron.NewScheduler(time.UTC),
-		notifier:        notifier,
+		config:   appConfig,
+		api:      api,
+		cron:     gocron.NewScheduler(time.UTC),
+		notifier: notifier,
 	}
 }
 
 type Scheduler struct {
-	config          configmodel.Config
-	api             api.Api
-	refreshInterval time.Duration
-	cron            *gocron.Scheduler
-	notifier        *notifier.Notifier
+	config   configmodel.Config
+	api      api.Api
+	cron     *gocron.Scheduler
+	notifier *notifier.Notifier
 }
 
 func (s Scheduler) liveLogTag() string {
@@ -45,14 +45,39 @@ func (s Scheduler) liveLogTag() string {
 	return "TEST"
 }
 
-func (s Scheduler) notifyOrder(order model.Order) error {
+func (s Scheduler) notifyOrder(order model.Order, transactionIds []string) error {
 	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
 
-	message := fmt.Sprintf("[%s] Ordered %s %s for %+v (%s = %f)...", s.liveLogTag(), s.api.FormatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
-	return (*s.notifier).Send(s.config.NotifyEmailAddress, "kraken-scheduler: Purchase", message)
+	notification := notificationtemplates.NewOrderNotification(
+		s.api.IsLive(),
+		order.Pair,
+		order.Amount(),
+		order.FiatAmount,
+		order.Price,
+		transactionIds,
+	)
+
+	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
+}
+
+func (s Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
+	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
+		log.Warn("Notifications not configured, not notifying")
+		return nil
+	}
+
+	notification := notificationtemplates.NewPurchaseNotification(
+		order.Pair,
+		order.Amount(),
+		order.FiatAmount,
+		transactionId,
+		completedOrder,
+	)
+
+	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
 }
 
 func (s Scheduler) process(schedule configmodel.Schedule) {
@@ -82,10 +107,32 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 
 	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
 
-	err = s.notifyOrder(*order)
+	err = s.notifyOrder(*order, transactionIds)
 	if err != nil {
-		log.Errorf("Unable to notify order: %s", err.Error())
-		return
+		log.Errorf("Unable to notify of order: %s", err.Error())
+	}
+
+	for _, transactionId := range transactionIds {
+		for { // TODO perform in background & have max attempts
+			completedOrder, err := s.api.TransactionStatus(transactionId)
+
+			if err != nil {
+				log.Errorf("Unable to check transaction status: %s", err.Error())
+			}
+
+			if completedOrder != nil {
+				log.Infof("Order %s was successfully completed", transactionId)
+
+				err = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
+				if err != nil {
+					log.Errorf("Unable to notify of completed order: %s", err.Error())
+				}
+				break
+			} else {
+				log.Infof("Order %s is pending...", transactionId)
+				time.Sleep(1 * time.Second)
+			}
+		}
 	}
 }
 

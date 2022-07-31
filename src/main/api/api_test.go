@@ -28,6 +28,16 @@ func (k *MockKrakenApi) AddOrder(pair string, direction string, orderType string
 	return argsCalled.Get(0).(*krakenapi.AddOrderResponse), argsCalled.Error(1)
 }
 
+func (k *MockKrakenApi) OpenOrders(args map[string]string) (*krakenapi.OpenOrdersResponse, error) {
+	argsCalled := k.Called(args)
+	return argsCalled.Get(0).(*krakenapi.OpenOrdersResponse), argsCalled.Error(1)
+}
+
+func (k *MockKrakenApi) ClosedOrders(args map[string]string) (*krakenapi.ClosedOrdersResponse, error) {
+	argsCalled := k.Called(args)
+	return argsCalled.Get(0).(*krakenapi.ClosedOrdersResponse), argsCalled.Error(1)
+}
+
 func TestApi_FormatAmount(t *testing.T) {
 	krakenAPI := new(MockKrakenApi)
 	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, true, krakenAPI)
@@ -100,4 +110,78 @@ func TestApi_SubmitOrder_NotLive(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, transactionIds, result)
+}
+
+func TestApi_TransactionStatus_Open(t *testing.T) {
+	krakenAPI := new(MockKrakenApi)
+	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, false, krakenAPI)
+
+	transactionId := "test-id"
+	order := krakenapi.Order{TransactionID: transactionId}
+
+	krakenAPI.On("OpenOrders", map[string]string{}).Return(&krakenapi.OpenOrdersResponse{
+		Count: 1,
+		Open:  map[string]krakenapi.Order{transactionId: order},
+	},
+		nil)
+
+	krakenAPI.On("ClosedOrders", map[string]string{}).Return(&krakenapi.ClosedOrdersResponse{
+		Count:  0,
+		Closed: map[string]krakenapi.Order{},
+	},
+		nil)
+
+	result, err := api.TransactionStatus(transactionId)
+
+	assert.NoError(t, err)
+	assert.Nil(t, result)
+}
+
+func TestApi_TransactionStatus_Closed(t *testing.T) {
+	krakenAPI := new(MockKrakenApi)
+	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, false, krakenAPI)
+
+	transactionId := "test-id"
+	order := krakenapi.Order{TransactionID: transactionId}
+
+	krakenAPI.On("OpenOrders", map[string]string{}).Return(&krakenapi.OpenOrdersResponse{
+		Count: 0,
+		Open:  map[string]krakenapi.Order{},
+	},
+		nil)
+
+	krakenAPI.On("ClosedOrders", map[string]string{}).Return(&krakenapi.ClosedOrdersResponse{
+		Count:  1,
+		Closed: map[string]krakenapi.Order{transactionId: order},
+	},
+		nil)
+
+	result, err := api.TransactionStatus(transactionId)
+
+	assert.NoError(t, err)
+	assert.Equal(t, &order, result)
+}
+
+func TestApi_TransactionStatus_NotFound(t *testing.T) {
+	krakenAPI := new(MockKrakenApi)
+	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, false, krakenAPI)
+
+	transactionId := "test-id"
+
+	krakenAPI.On("OpenOrders", map[string]string{}).Return(&krakenapi.OpenOrdersResponse{
+		Count: 0,
+		Open:  map[string]krakenapi.Order{},
+	},
+		nil)
+
+	krakenAPI.On("ClosedOrders", map[string]string{}).Return(&krakenapi.ClosedOrdersResponse{
+		Count:  1,
+		Closed: map[string]krakenapi.Order{},
+	},
+		nil)
+
+	result, err := api.TransactionStatus(transactionId)
+
+	assert.EqualError(t, err, "transaction test-id could not be found in open or closed order history")
+	assert.Nil(t, result)
 }
