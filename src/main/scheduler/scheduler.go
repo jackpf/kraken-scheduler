@@ -156,11 +156,25 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 	}
 }
 
+func (s Scheduler) validateSchedule(schedule configmodel.Schedule) error {
+	// Ensure pair is valid
+	if !reflect.ValueOf(krakenapi.AssetPairsResponse{}).
+		FieldByName(schedule.Pair).IsValid() {
+		return fmt.Errorf("%s is not a valid asset pair", schedule.Pair)
+	}
+
+	return nil
+}
+
 func (s Scheduler) Run() {
 	for {
 		for _, schedule := range s.config.Schedules {
-			_, err := s.cron.Cron(schedule.Cron).Do(s.process, schedule)
+			err := s.validateSchedule(schedule)
+			if err != nil {
+				log.Fatalf("Invalid schedule: %s", err.Error())
+			}
 
+			_, err = s.cron.Cron(schedule.Cron).Do(s.process, schedule)
 			if err != nil {
 				log.Fatalf("Unable to create cron schedule: %s", err.Error())
 			}
