@@ -2,6 +2,11 @@
 
 <img src="./doc/img/kraken-logo.png" alt="drawing" width="200" />
 
+Build status:
+
+![build status](https://github.com/jackpf/kraken-scheduler/actions/workflows/go.yml/badge.svg)
+
+
 Tired of manually buying crypto every month? Every week? Every day?!
 
 This application creates automated buy orders for cryptocurrencies on [Kraken](https://www.kraken.com/)
