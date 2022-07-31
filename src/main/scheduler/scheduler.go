@@ -46,7 +46,7 @@ func (s Scheduler) liveLogTag() string {
 }
 
 func (s Scheduler) notifyOrder(order model.Order) error {
-	if s.notifier == nil {
+	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
