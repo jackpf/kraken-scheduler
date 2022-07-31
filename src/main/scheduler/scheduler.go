@@ -20,7 +20,7 @@ import (
 	configmodel "github.com/jackpf/kraken-schedule/src/main/config/model"
 )
 
-func NewScheduler(appConfig configmodel.Config, api *api.Api, notifier *notifier.Notifier) Scheduler {
+func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.Notifier) Scheduler {
 	return Scheduler{
 		config:          appConfig,
 		api:             api,
@@ -32,14 +32,14 @@ func NewScheduler(appConfig configmodel.Config, api *api.Api, notifier *notifier
 
 type Scheduler struct {
 	config          configmodel.Config
-	api             *api.Api
+	api             api.Api
 	refreshInterval time.Duration
 	cron            *gocron.Scheduler
 	notifier        *notifier.Notifier
 }
 
 func (s Scheduler) liveLogTag() string {
-	if s.api.Live {
+	if s.api.IsLive() {
 		return "LIVE"
 	}
 	return "TEST"
@@ -76,7 +76,7 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 	}
 
 	transactionIdsString := strings.Join(transactionIds[:], ", ")
-	if !s.api.Live {
+	if !s.api.IsLive() {
 		transactionIdsString = "<no transaction IDs for test orders>"
 	}
 
