@@ -13,7 +13,6 @@ import (
 type Api interface {
 	FormatAmount(amount float64) string
 	CreateOrder(schedule configmodel.Schedule) (*model.Order, error)
-	ValidateOrder(order model.Order) error
 	SubmitOrder(order model.Order) ([]string, error)
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
 	IsLive() bool
@@ -73,14 +72,6 @@ func (a ApiImpl) CreateOrder(schedule configmodel.Schedule) (*model.Order, error
 	order := model.NewOrder(schedule.Pair, *currentPrice, schedule.Amount)
 
 	return &order, nil
-}
-
-func (a ApiImpl) ValidateOrder(order model.Order) error {
-	if order.Amount() < 0.0001 {
-		return fmt.Errorf("order amount too small: %f", order.Amount())
-	}
-
-	return nil
 }
 
 // TODO Check order status & send confirmation

@@ -87,12 +87,6 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 		return
 	}
 
-	err = s.api.ValidateOrder(*order)
-	if err != nil {
-		log.Errorf("Unable to validate order: %s", err.Error())
-		return
-	}
-
 	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", s.liveLogTag(), s.api.FormatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
 	transactionIds, err := s.api.SubmitOrder(*order)
 	if err != nil {

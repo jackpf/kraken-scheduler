@@ -67,17 +67,6 @@ func TestApi_CreateOrder(t *testing.T) {
 	assert.Equal(t, 0.5, order.Amount())
 }
 
-func TestApi_ValidateOrder(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
-	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, true, krakenAPI)
-
-	resultValid := api.ValidateOrder(model.NewOrder("test-pair", 123.0, 456.0))
-	assert.NoError(t, resultValid)
-
-	resultInvalid := api.ValidateOrder(model.NewOrder("test-pair", 123.0, 0.0))
-	assert.EqualError(t, resultInvalid, "order amount too small: 0.000000")
-}
-
 func TestApi_SubmitOrder(t *testing.T) {
 	krakenAPI := new(MockKrakenApi)
 	api := NewApi(configmodel.Config{"", []configmodel.Schedule{}}, true, krakenAPI)
