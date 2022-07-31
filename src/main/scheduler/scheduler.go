@@ -130,7 +130,7 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 				break
 			} else {
 				log.Infof("Order %s is pending...", transactionId)
-				time.Sleep(8 * time.Second)
+				time.Sleep(1 * time.Second)
 			}
 		}
 	}
