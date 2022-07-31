@@ -26,7 +26,7 @@ func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.
 	return Scheduler{
 		config:   appConfig,
 		api:      api,
-		cron:     gocron.NewScheduler(time.UTC),
+		cron:     gocron.NewScheduler(time.Now().Location()),
 		notifier: notifier,
 	}
 }
