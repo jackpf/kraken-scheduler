@@ -21,13 +21,18 @@ for incorrectly placed orders.
 - Required permissions are `Query funds`, `Query open orders & trades`, `Query closed orders & trades` and `Create and modify orders` for the application to run correctly
 - In order to receive email notifications, you must create your own GMail OAuth credentials, see https://developers.google.com/identity/protocols/oauth2
 
+## Installation from binaries
+
+Check the [releases](https://github.com/jackpf/kraken-scheduler/releases), and download the binary relating
+to your operating system.
+
 ## Building
 
 1. Ensure you have [go](https://go.dev/) installed (at least version 1.18)
 2. Run `make build`
 3. Executable is created in `./target/kraken-schedule`
 
-## Installation (Linux / OSX only)
+## Installation from source (Linux / OSX only)
 
 1. Run `make install` (binary is copied to `/usr/local/bin`)
 
