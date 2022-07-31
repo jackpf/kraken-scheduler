@@ -61,7 +61,7 @@ func (a ApiImpl) getCurrentPrice(pair string) (*float32, error) {
 }
 
 func (a ApiImpl) FormatAmount(amount float32) string {
-	return fmt.Sprintf("%.4f", amount)
+	return fmt.Sprintf("%.8f", amount)
 }
 
 func (a ApiImpl) CreateOrder(schedule configmodel.Schedule) (*model.Order, error) { // TODO Retry
