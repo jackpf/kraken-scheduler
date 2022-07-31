@@ -67,4 +67,10 @@ Run with:
 kraken-schedule --key KEY --secret SECRET --config CONFIG [--credentials CREDENTIALS] [--live]
 ```
 
-Run `kraken-schedule --help` for a description of each argument.
+Note that by default the application runs in test mode, and doesn't create real orders.
+
+This is useful to validate that you've configured things correctly, and the purchase amounts are correct.
+
+To place real orders, you must pass `--live true` when running.
+
+Run `kraken-schedule --help` for a description of all arguments.
