@@ -163,6 +163,11 @@ func (s Scheduler) validateSchedule(schedule configmodel.Schedule) error {
 		return fmt.Errorf("%s is not a valid asset pair", schedule.Pair)
 	}
 
+	// Ensure valid amount
+	if schedule.Amount <= 0.0 {
+		return fmt.Errorf("purchase amount must be >= 0, got %f", schedule.Amount)
+	}
+
 	return nil
 }
 
