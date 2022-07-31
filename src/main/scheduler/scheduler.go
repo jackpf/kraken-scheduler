@@ -19,10 +19,10 @@ import (
 	configmodel "github.com/jackpf/kraken-schedule/src/main/config/model"
 )
 
-func NewScheduler(appConfig configmodel.Config, validate bool, api *krakenapi.KrakenAPI, notifier notifier.Notifier) Scheduler {
+func NewScheduler(appConfig configmodel.Config, live bool, api *krakenapi.KrakenAPI, notifier *notifier.Notifier) Scheduler {
 	return Scheduler{
 		config:          appConfig,
-		validate:        validate,
+		live:            live,
 		refreshInterval: 1 * time.Minute,
 		api:             api,
 		cron:            gocron.NewScheduler(time.UTC),
@@ -32,11 +32,18 @@ func NewScheduler(appConfig configmodel.Config, validate bool, api *krakenapi.Kr
 
 type Scheduler struct {
 	config          configmodel.Config
-	validate        bool
+	live            bool
 	refreshInterval time.Duration
 	api             *krakenapi.KrakenAPI
 	cron            *gocron.Scheduler
-	notifier        notifier.Notifier
+	notifier        *notifier.Notifier
+}
+
+func (s Scheduler) liveLogTag() string {
+	if s.live {
+		return "LIVE"
+	}
+	return "TEST"
 }
 
 func (s Scheduler) getCurrentPrice(pair string) (*float32, error) {
@@ -88,16 +95,12 @@ func (s Scheduler) validateOrder(order model.Order) error {
 	return nil
 }
 
+// TODO Check order status & send confirmation
 func (s Scheduler) submitOrder(order model.Order) error { // TODO Retry
-	validateLogTag := "LIVE"
-	if s.validate {
-		validateLogTag = "TEST"
-	}
-
-	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
+	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", s.liveLogTag(), s.formatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
 
 	data := map[string]string{}
-	if s.validate {
+	if !s.live {
 		data["validate"] = "true"
 	}
 
@@ -108,23 +111,23 @@ func (s Scheduler) submitOrder(order model.Order) error { // TODO Retry
 	}
 
 	transactionIdsString := strings.Join(orderResponse.TransactionIds[:], ", ")
-	if s.validate {
+	if !s.live {
 		transactionIdsString = "<no transaction IDs for test orders>"
 	}
 
-	log.Infof("[%s] Order placed: %s", validateLogTag, transactionIdsString)
+	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
 
 	return nil
 }
 
 func (s Scheduler) notifyOrder(order model.Order) error {
-	validateLogTag := "LIVE"
-	if s.validate {
-		validateLogTag = "TEST"
+	if s.notifier == nil {
+		log.Warn("Notifications not configured, not notifying")
+		return nil
 	}
-	message := fmt.Sprintf("[%s] Ordered %s %s for %+v (%s = %f)...", validateLogTag, s.formatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
 
-	return s.notifier.Send(s.config.NotifyEmailAddress, "kraken-scheduler: Purchase", message)
+	message := fmt.Sprintf("[%s] Ordered %s %s for %+v (%s = %f)...", s.liveLogTag(), s.formatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
+	return (*s.notifier).Send(s.config.NotifyEmailAddress, "kraken-scheduler: Purchase", message)
 }
 
 func (s Scheduler) process(schedule configmodel.Schedule) {
