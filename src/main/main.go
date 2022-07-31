@@ -16,7 +16,7 @@ func main() {
 		Key             string `arg:"required" help:"Your Kraken API key"`
 		Secret          string `arg:"required" help:"Your Kraken secret key"`
 		ConfigFile      string `arg:"--config,required" help:"Schedule configuration file"`
-		CredentialsFile string `arg:"--credentials" help:"Your google OAuth credentials file (optional)"`
+		CredentialsFile string `arg:"--credentials" help:"Your google OAuth credentials.json file (optional)"`
 		IsLive          bool   `arg:"--live" default:"false" help:"Set to true to execute real orders"`
 	}
 	arg.MustParse(&args)
