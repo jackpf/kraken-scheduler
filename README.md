@@ -7,6 +7,9 @@ Tired of manually buying crypto every month? Every week? Every day?!
 This application creates automated buy orders for cryptocurrencies on [Kraken](https://www.kraken.com/)
 based on your configuration, with email alerts on order placements and status (currently requires GMail).
 
+Disclaimer: this application isn't affiliated with Kraken in any way, and I take no responsibility
+for incorrectly placed orders.
+
 ## Prerequisites
 
 - You must create a Kraken API key to run the scheduler, see https://support.kraken.com/hc/en-us/articles/360000919966-How-to-generate-an-API-key-pair-
