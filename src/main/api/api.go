@@ -109,10 +109,10 @@ func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, erro
 		return nil, err
 	}
 
-	if order, isOpen := openOrders.Open[transactionId]; isOpen {
-		return &order, nil
-	} else if _, isClosed := closedOrders.Closed[transactionId]; isClosed {
+	if _, isOpen := openOrders.Open[transactionId]; isOpen {
 		return nil, nil
+	} else if order, isClosed := closedOrders.Closed[transactionId]; isClosed {
+		return &order, nil
 	} else {
 		return nil, fmt.Errorf("transaction %s could not be found in open or closed order history", transactionId)
 	}

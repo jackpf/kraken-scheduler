@@ -24,20 +24,18 @@ import (
 
 func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.Notifier) Scheduler {
 	return Scheduler{
-		config:          appConfig,
-		api:             api,
-		refreshInterval: 1 * time.Minute,
-		cron:            gocron.NewScheduler(time.UTC),
-		notifier:        notifier,
+		config:   appConfig,
+		api:      api,
+		cron:     gocron.NewScheduler(time.UTC),
+		notifier: notifier,
 	}
 }
 
 type Scheduler struct {
-	config          configmodel.Config
-	api             api.Api
-	refreshInterval time.Duration
-	cron            *gocron.Scheduler
-	notifier        *notifier.Notifier
+	config   configmodel.Config
+	api      api.Api
+	cron     *gocron.Scheduler
+	notifier *notifier.Notifier
 }
 
 func (s Scheduler) liveLogTag() string {
@@ -115,16 +113,24 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 	}
 
 	for _, transactionId := range transactionIds {
-		completedOrder, err := s.api.TransactionStatus(transactionId) // TODO needs to be retried & performed in background
+		for { // TODO perform in background & have max attempts
+			completedOrder, err := s.api.TransactionStatus(transactionId)
 
-		if err != nil {
-			log.Errorf("Unable to check transaction status: %s", err.Error())
-		}
-
-		if completedOrder != nil {
-			err = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
 			if err != nil {
-				log.Errorf("Unable to notify of completed order: %s", err.Error())
+				log.Errorf("Unable to check transaction status: %s", err.Error())
+			}
+
+			if completedOrder != nil {
+				log.Infof("Order %s was successfully completed", transactionId)
+
+				err = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
+				if err != nil {
+					log.Errorf("Unable to notify of completed order: %s", err.Error())
+				}
+				break
+			} else {
+				log.Infof("Order %s is pending...", transactionId)
+				time.Sleep(8 * time.Second)
 			}
 		}
 	}

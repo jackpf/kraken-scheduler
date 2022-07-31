@@ -134,7 +134,7 @@ func TestApi_TransactionStatus_Open(t *testing.T) {
 	result, err := api.TransactionStatus(transactionId)
 
 	assert.NoError(t, err)
-	assert.Equal(t, &order, result)
+	assert.Nil(t, result)
 }
 
 func TestApi_TransactionStatus_Closed(t *testing.T) {
@@ -159,7 +159,7 @@ func TestApi_TransactionStatus_Closed(t *testing.T) {
 	result, err := api.TransactionStatus(transactionId)
 
 	assert.NoError(t, err)
-	assert.Nil(t, result)
+	assert.Equal(t, &order, result)
 }
 
 func TestApi_TransactionStatus_NotFound(t *testing.T) {
