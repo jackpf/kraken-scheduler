@@ -36,16 +36,20 @@ type Scheduler struct {
 	api      api.Api
 	cron     *gocron.Scheduler
 	notifier *notifier.Notifier
+	jobs     []struct {
+		configmodel.Schedule
+		*gocron.Job
+	}
 }
 
-func (s Scheduler) liveLogTag() string {
+func (s *Scheduler) liveLogTag() string {
 	if s.api.IsLive() {
 		return "LIVE"
 	}
 	return "TEST"
 }
 
-func (s Scheduler) notifyOrder(order model.Order, transactionIds []string) error {
+func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) error {
 	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
@@ -63,7 +67,7 @@ func (s Scheduler) notifyOrder(order model.Order, transactionIds []string) error
 	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
 }
 
-func (s Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
+func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
 	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
@@ -80,7 +84,7 @@ func (s Scheduler) notifyCompletedTrade(order model.Order, completedOrder kraken
 	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
 }
 
-func (s Scheduler) process(schedule configmodel.Schedule) {
+func (s *Scheduler) process(schedule configmodel.Schedule) {
 	order, err := s.api.CreateOrder(schedule)
 	if err != nil {
 		log.Errorf("Unable to create order: %s", err.Error())
@@ -128,9 +132,14 @@ func (s Scheduler) process(schedule configmodel.Schedule) {
 			}
 		}
 	}
+
+	job := s.findJob(schedule)
+	if job != nil {
+		log.Infof("Next purchase for %s will occur at %+v", job.Pair, job.NextRun())
+	}
 }
 
-func (s Scheduler) validateSchedule(schedule configmodel.Schedule) error {
+func (s *Scheduler) validateSchedule(schedule configmodel.Schedule) error {
 	// Ensure pair is valid
 	if !reflect.ValueOf(krakenapi.AssetPairsResponse{}).
 		FieldByName(schedule.Pair).IsValid() {
@@ -145,22 +154,44 @@ func (s Scheduler) validateSchedule(schedule configmodel.Schedule) error {
 	return nil
 }
 
-func (s Scheduler) Run() {
-	for {
-		for _, schedule := range s.config.Schedules {
-			err := s.validateSchedule(schedule)
-			if err != nil {
-				log.Fatalf("Invalid schedule: %s", err.Error())
-			}
+func (s *Scheduler) findJob(schedule configmodel.Schedule) *struct {
+	configmodel.Schedule
+	*gocron.Job
+} {
+	for _, job := range s.jobs {
+		if job.Schedule == schedule {
+			return &job
+		}
+	}
 
-			_, err = s.cron.Cron(schedule.Cron).Do(s.process, schedule)
-			if err != nil {
-				log.Fatalf("Unable to create cron schedule: %s", err.Error())
-			}
+	return nil
+}
 
-			log.Infof("Created cron schedule for %s", schedule.Pair)
+func (s *Scheduler) Run() {
+	for _, schedule := range s.config.Schedules {
+		err := s.validateSchedule(schedule)
+		if err != nil {
+			log.Fatalf("Invalid schedule: %s", err.Error())
 		}
 
-		s.cron.StartBlocking()
+		job, err := s.cron.Cron(schedule.Cron).Do(s.process, schedule)
+		if err != nil {
+			log.Fatalf("Unable to create cron schedule: %s", err.Error())
+		}
+
+		s.jobs = append(s.jobs, struct {
+			configmodel.Schedule
+			*gocron.Job
+		}{schedule, job})
 	}
+
+	// Jobs don't have next run information until the scheduler is started
+	// Start async, then block after
+	s.cron.StartAsync()
+
+	for _, job := range s.jobs {
+		log.Infof("Created schedule for %s, purchase will occur at %+v", job.Pair, job.NextRun())
+	}
+
+	s.cron.StartBlocking()
 }
