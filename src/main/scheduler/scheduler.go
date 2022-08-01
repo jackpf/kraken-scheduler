@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
+
+	"github.com/jackpf/kraken-schedule/src/main/util"
 
 	"github.com/jackpf/kraken-schedule/src/main/notificationtemplates"
 
@@ -40,6 +44,10 @@ type Scheduler struct {
 		configmodel.Schedule
 		*gocron.Job
 	}
+	// State & mutex required for printing console output/loading bars correctly
+	startTime time.Time
+	mutex     sync.Mutex
+	jobRuns   uint64
 }
 
 func (s *Scheduler) liveLogTag() string {
@@ -85,6 +93,10 @@ func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krake
 }
 
 func (s *Scheduler) process(schedule configmodel.Schedule) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	atomic.AddUint64(&s.jobRuns, 1)
+
 	order, err := s.api.CreateOrder(schedule)
 	if err != nil {
 		log.Errorf("Unable to create order: %s", err.Error())
@@ -167,7 +179,38 @@ func (s *Scheduler) findJob(schedule configmodel.Schedule) *struct {
 	return nil
 }
 
+func (s *Scheduler) printJobTimeDiffs() {
+	first := true
+	lastJobRuns := uint64(0)
+
+	for {
+		s.mutex.Lock()
+
+		if !first && lastJobRuns == s.jobRuns {
+			util.ClearConsoleLines(len(s.jobs))
+		}
+		first = false
+
+		for _, job := range s.jobs {
+			lastRunTime := job.LastRun().Unix()
+			if s.jobRuns == 0 {
+				lastRunTime = s.startTime.Unix()
+			}
+
+			completedRatio := float64(time.Now().Unix()-lastRunTime) / float64(job.NextRun().Unix()-lastRunTime)
+
+			fmt.Printf("Purchasing %s in %s\t%s\n", job.Pair, util.PrettyDuration(time.Until(job.NextRun())), util.ProgressBar(completedRatio, 30))
+		}
+		lastJobRuns = s.jobRuns
+
+		s.mutex.Unlock()
+		time.Sleep(1 * time.Second)
+	}
+}
+
 func (s *Scheduler) Run() {
+	s.startTime = time.Now()
+
 	for _, schedule := range s.config.Schedules {
 		err := s.validateSchedule(schedule)
 		if err != nil {
@@ -192,6 +235,8 @@ func (s *Scheduler) Run() {
 	for _, job := range s.jobs {
 		log.Infof("Created schedule for %s, purchase will occur at %+v", job.Pair, job.NextRun())
 	}
+
+	go s.printJobTimeDiffs()
 
 	s.cron.StartBlocking()
 }
