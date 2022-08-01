@@ -193,13 +193,14 @@ func (s *Scheduler) printJobTimeDiffs() {
 
 		for _, job := range s.jobs {
 			lastRunTime := job.LastRun().Unix()
-			if s.jobRuns == 0 {
+			if job.RunCount() == 0 {
 				lastRunTime = s.startTime.Unix()
 			}
 
 			completedRatio := float64(time.Now().Unix()-lastRunTime) / float64(job.NextRun().Unix()-lastRunTime)
 
-			fmt.Printf("Purchasing %s in %s\t%s\n", job.Pair, util.PrettyDuration(time.Until(job.NextRun())), util.ProgressBar(completedRatio, 30))
+			logOutput := util.PadLine(fmt.Sprintf("Purchasing %s in %s", job.Pair, util.PrettyDuration(time.Until(job.NextRun()))), 60)
+			fmt.Printf("%s%s\n", logOutput, util.ProgressBar(completedRatio, 30))
 		}
 		lastJobRuns = s.jobRuns
 
