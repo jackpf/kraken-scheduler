@@ -18,26 +18,26 @@ type OrderNotification struct {
 	transactionIds []string
 }
 
-func (o OrderNotification) Subject() string {
+func (n OrderNotification) Subject() string {
 	testTag := ""
-	if !o.isLive {
+	if !n.isLive {
 		testTag = " [TEST]"
 	}
-	return fmt.Sprintf("kraken-scheduler%s: %s order submitted (%s)", testTag, o.pair, strings.Join(o.transactionIds[:], ", "))
+	return fmt.Sprintf("kraken-scheduler%s: %s order submitted (%s)", testTag, n.pair, strings.Join(n.transactionIds[:], ", "))
 }
 
-func (o OrderNotification) Body() string {
+func (n OrderNotification) Body() string {
 	return fmt.Sprintf(`Transaction ID: %s.
 
 Placed an order for %f %s, at a cost of %f.
 Current asset price: 1 * %s = %f.
 
 Purchase confirmation should arrive shortly, if not - check the application logs!`,
-		strings.Join(o.transactionIds[:], ", "),
-		o.amount,
-		o.pair,
-		o.orderPrice,
-		o.pair,
-		o.assetPrice)
+		strings.Join(n.transactionIds[:], ", "),
+		n.amount,
+		n.pair,
+		n.orderPrice,
+		n.pair,
+		n.assetPrice)
 
 }

@@ -75,6 +75,22 @@ func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) erro
 	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
 }
 
+func (s *Scheduler) notifyError(order model.Order, err error) error {
+	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
+		log.Warn("Notifications not configured, not notifying")
+		return nil
+	}
+
+	notification := notificationtemplates.NewErrorNotification(
+		order.Pair,
+		order.Amount(),
+		order.FiatAmount,
+		err,
+	)
+
+	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
+}
+
 func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
 	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
@@ -100,6 +116,10 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	order, err := s.api.CreateOrder(schedule)
 	if err != nil {
 		log.Errorf("Unable to create order: %s", err.Error())
+		err = s.notifyError(*order, err)
+		if err != nil {
+			log.Errorf("Unable to notify of error: %s", err.Error())
+		}
 		return
 	}
 
@@ -107,6 +127,10 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	transactionIds, err := s.api.SubmitOrder(*order)
 	if err != nil {
 		log.Errorf("Unable to submit order: %s", err.Error())
+		err = s.notifyError(*order, err)
+		if err != nil {
+			log.Errorf("Unable to notify of error: %s", err.Error())
+		}
 		return
 	}
 

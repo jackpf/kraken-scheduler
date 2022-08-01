@@ -18,19 +18,19 @@ type PurchaseNotification struct {
 	completedOrder krakenapi.Order // TODO Take individual values
 }
 
-func (p PurchaseNotification) Subject() string {
-	return fmt.Sprintf("kraken-scheduler: %s purchase successful (%s)", p.pair, p.transactionId)
+func (n PurchaseNotification) Subject() string {
+	return fmt.Sprintf("kraken-scheduler: %s purchase successful (%s)", n.pair, n.transactionId)
 }
 
-func (p PurchaseNotification) Body() string {
+func (n PurchaseNotification) Body() string {
 	return fmt.Sprintf(`Transaction ID: %s.
 
 Purchase of %f %s, at a cost of %f was successful.
 
 Transaction summary: %+v`,
-		p.transactionId,
-		p.amount,
-		p.pair,
-		p.orderPrice,
-		p.completedOrder)
+		n.transactionId,
+		n.amount,
+		n.pair,
+		n.orderPrice,
+		n.completedOrder)
 }
