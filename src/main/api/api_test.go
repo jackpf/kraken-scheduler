@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jackpf/kraken-schedule/src/main/scheduler/model"
+	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 
 	"github.com/stretchr/testify/assert"
 
 	krakenapi "github.com/beldur/kraken-go-api-client"
 
-	configmodel "github.com/jackpf/kraken-schedule/src/main/config/model"
+	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 	"github.com/stretchr/testify/mock"
 )
 

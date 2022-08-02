@@ -1,4 +1,4 @@
-APP_NAME = kraken-schedule
+APP_NAME = kraken-scheduler
 SRC_DIR = ./src/main
 TARGET_DIR = ./target
 BUILD_VARS ?=
@@ -21,4 +21,4 @@ cross-build:
 	POSTFIX=-linux-amd64 BUILD_VARS="GOOS=linux GOARCH=amd64" $(MAKE) build
 
 install: build
-	cp ./target/kraken-schedule /usr/local/bin
+	cp ./target/kraken-scheduler /usr/local/bin

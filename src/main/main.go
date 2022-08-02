@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/jackpf/kraken-schedule/src/main/api"
-	"github.com/jackpf/kraken-schedule/src/main/config"
-	"github.com/jackpf/kraken-schedule/src/main/scheduler"
+	"github.com/jackpf/kraken-scheduler/src/main/api"
+	"github.com/jackpf/kraken-scheduler/src/main/config"
+	"github.com/jackpf/kraken-scheduler/src/main/scheduler"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jackpf/kraken-schedule/src/main/notifier"
+	"github.com/jackpf/kraken-scheduler/src/main/notifier"
 
 	"github.com/alexflint/go-arg"
 	krakenapi "github.com/beldur/kraken-go-api-client"
