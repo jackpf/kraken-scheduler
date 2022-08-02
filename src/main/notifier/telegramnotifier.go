@@ -33,9 +33,7 @@ func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 }
 
 // sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
-func sendNotificationToTelegramChat(credentialsFile string, text string) (string, error) {
-
-	var credentials TelegramCredentials = readTelegramCredentials(credentialsFile)
+func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (string, error) {
 
 	fmt.Printf("Sending %s to chat_id: %d", text, credentials.ChatID)
 
@@ -63,4 +61,18 @@ func sendNotificationToTelegramChat(credentialsFile string, text string) (string
 	fmt.Printf("Body of Telegram Response: %s", bodyString)
 
 	return bodyString, nil
+}
+
+type TelegramNotifier struct {
+	credentials TelegramCredentials
+}
+
+func NewTelegramNotifier(credentialsFile string) *TelegramNotifier {
+	var credentials TelegramCredentials = readTelegramCredentials(credentialsFile)
+	return &TelegramNotifier{credentials: credentials}
+}
+
+func (m TelegramNotifier) Send(subject string, body string) error {
+	_, err := sendNotificationToTelegramChat(m.credentials, body)
+	return err
 }

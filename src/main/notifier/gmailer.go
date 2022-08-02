@@ -82,8 +82,8 @@ func getOrCreateToken(config *oauth2.Config, path string) *oauth2.Token {
 	return token
 }
 
-func MustNewGMailer(credentialsFile string, userId string) *GMailer {
-	gmailer, err := NewGMailer(credentialsFile, userId)
+func MustNewGMailer(credentialsFile string, userId string, sendTo string) *GMailer {
+	gmailer, err := NewGMailer(credentialsFile, userId, sendTo)
 
 	if err != nil {
 		log.Fatal(err)
@@ -92,7 +92,7 @@ func MustNewGMailer(credentialsFile string, userId string) *GMailer {
 	return gmailer
 }
 
-func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
+func NewGMailer(credentialsFile string, userId string, sendTo string) (*GMailer, error) {
 	ctx := context.Background()
 
 	credentials, err := readCredentials(credentialsFile)
@@ -123,18 +123,19 @@ func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
 		return nil, err
 	}
 
-	return &GMailer{service: service, userId: userId}, nil
+	return &GMailer{service: service, userId: userId, sendTo: sendTo}, nil
 }
 
 type GMailer struct {
 	service *gmail.Service
 	userId  string
+	sendTo  string
 }
 
-func (m GMailer) Send(to string, subject string, body string) error {
+func (m GMailer) Send(subject string, body string) error {
 	var message gmail.Message
 
-	emailTo := fmt.Sprintf("To: %s\r\n", to)
+	emailTo := fmt.Sprintf("To: %s\r\n", m.sendTo)
 	emailSubject := fmt.Sprintf("Subject: %s\r\n", subject)
 	emailMime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
 	emailMessage := []byte(emailTo + emailSubject + emailMime + "\n" + body)

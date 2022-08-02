@@ -26,21 +26,21 @@ import (
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
-func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.Notifier) Scheduler {
+func NewScheduler(appConfig configmodel.Config, api api.Api, notifiers []*notifier.Notifier) Scheduler {
 	return Scheduler{
-		config:   appConfig,
-		api:      api,
-		cron:     gocron.NewScheduler(time.Now().Location()),
-		notifier: notifier,
+		config:    appConfig,
+		api:       api,
+		cron:      gocron.NewScheduler(time.Now().Location()),
+		notifiers: notifiers,
 	}
 }
 
 type Scheduler struct {
-	config   configmodel.Config
-	api      api.Api
-	cron     *gocron.Scheduler
-	notifier *notifier.Notifier
-	jobs     []struct {
+	config    configmodel.Config
+	api       api.Api
+	cron      *gocron.Scheduler
+	notifiers []*notifier.Notifier
+	jobs      []struct {
 		configmodel.Schedule
 		*gocron.Job
 	}
@@ -57,8 +57,8 @@ func (s *Scheduler) liveLogTag() string {
 	return "TEST"
 }
 
-func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) error {
-	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
+func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []error {
+	if s.notifiers == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
@@ -72,11 +72,19 @@ func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) erro
 		transactionIds,
 	)
 
-	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
+	var errors []error
+	for _, notifier := range s.notifiers {
+		var err = (*notifier).Send(notification.Subject(), notification.Body())
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	return errors
 }
 
-func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
-	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
+func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) []error {
+	if s.notifiers == nil || s.config.NotifyEmailAddress == "" {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
@@ -89,7 +97,15 @@ func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krake
 		completedOrder,
 	)
 
-	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
+	var errors []error
+	for _, notifier := range s.notifiers {
+		var err = (*notifier).Send(notification.Subject(), notification.Body())
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	return errors
 }
 
 func (s *Scheduler) process(schedule configmodel.Schedule) {
@@ -117,9 +133,12 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 
 	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
 
-	err = s.notifyOrder(*order, transactionIds)
-	if err != nil {
-		log.Errorf("Unable to notify of order: %s", err.Error())
+	var errors = s.notifyOrder(*order, transactionIds)
+
+	if errors != nil {
+		for _, err := range errors {
+			log.Errorf("Unable to notify of completed order: %s", err.Error())
+		}
 	}
 
 	for _, transactionId := range transactionIds {
@@ -133,9 +152,12 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 			if completedOrder != nil {
 				log.Infof("Order %s was successfully completed", transactionId)
 
-				err = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
-				if err != nil {
-					log.Errorf("Unable to notify of completed order: %s", err.Error())
+				var errors = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
+
+				if errors != nil {
+					for _, err := range errors {
+						log.Errorf("Unable to notify of completed order: %s", err.Error())
+					}
 				}
 				break
 			} else {
