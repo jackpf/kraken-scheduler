@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/jackpf/kraken-schedule/src/main/config/model"
+	"github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
 func ParseConfigFile(fileName string) (*model.Config, error) {

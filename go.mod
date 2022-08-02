@@ -1,4 +1,4 @@
-module github.com/jackpf/kraken-schedule
+module github.com/jackpf/kraken-scheduler
 
 go 1.18
 

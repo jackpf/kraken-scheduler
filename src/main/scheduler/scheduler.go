@@ -8,22 +8,22 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jackpf/kraken-schedule/src/main/util"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 
-	"github.com/jackpf/kraken-schedule/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
 
-	"github.com/jackpf/kraken-schedule/src/main/api"
+	"github.com/jackpf/kraken-scheduler/src/main/api"
 
-	"github.com/jackpf/kraken-schedule/src/main/scheduler/model"
+	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 
 	"github.com/go-co-op/gocron"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jackpf/kraken-schedule/src/main/notifier"
+	"github.com/jackpf/kraken-scheduler/src/main/notifier"
 
 	krakenapi "github.com/beldur/kraken-go-api-client"
-	configmodel "github.com/jackpf/kraken-schedule/src/main/config/model"
+	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
 func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.Notifier) Scheduler {

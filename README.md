@@ -30,7 +30,7 @@ to your operating system.
 
 1. Ensure you have [go](https://go.dev/) installed (at least version 1.18)
 2. Run `make build`
-3. Executable is created in `./target/kraken-schedule`
+3. Executable is created in `./target/kraken-scheduler`
 
 ## Installation from source (Linux / OSX only)
 
@@ -40,7 +40,7 @@ to your operating system.
 
 The application needs a JSON configuration file to run.
 
-Create `config.json` in the directory of your choice (eg. `$HOME/.kraken-schedule/config.json`).
+Create `config.json` in the directory of your choice (eg. `$HOME/.kraken-scheduler/config.json`).
 
 Example configuration:
 
@@ -77,7 +77,7 @@ Here is a detailed explanation of each schedule parameter:
 Run with:
 
 ```shell
-kraken-schedule --key KEY --secret SECRET --config CONFIG [--credentials CREDENTIALS] [--live]
+kraken-scheduler --key KEY --secret SECRET --config CONFIG [--credentials CREDENTIALS] [--live]
 ```
 
 Note that by default the application runs in test mode, and doesn't create real orders.
@@ -86,4 +86,4 @@ This is useful to validate that you've configured things correctly, and the purc
 
 To place real orders, you must pass `--live` when running.
 
-Run `kraken-schedule --help` for a description of all arguments.
+Run `kraken-scheduler --help` for a description of all arguments.
