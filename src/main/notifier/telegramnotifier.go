@@ -1,24 +1,49 @@
 package notifier
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 )
 
+type TelegramCredentials struct {
+	Token  string
+	ChatID int
+}
+
+func readTelegramCredentials(credentialsFile string) TelegramCredentials {
+	// Let's first read the `telegram-credentials.json` file
+	content, err := ioutil.ReadFile("./telegram-credentials.json")
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	// Now let's unmarshall the data into `payload`
+	var credentials TelegramCredentials
+	err = json.Unmarshal(content, &credentials)
+	if err != nil {
+		log.Fatal("Error during Unmarshal(): ", err)
+	}
+
+	return credentials
+}
+
 // sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
-func sendNotificationToTelegramChat(chatId int, text string) (string, error) {
+func sendNotificationToTelegramChat(credentialsFile string, text string) (string, error) {
 
-	fmt.Printf("Sending %s to chat_id: %d", text, chatId)
+	var credentials TelegramCredentials = readTelegramCredentials(credentialsFile)
 
-	var telegramApi string = "https://api.telegram.org/bot" + os.Getenv("TELEGRAM_BOT_TOKEN") + "/sendMessage" // TODO get token from environment
+	fmt.Printf("Sending %s to chat_id: %d", text, credentials.ChatID)
+
+	var telegramApi string = "https://api.telegram.org/bot" + credentials.Token + "/sendMessage" // TODO get token from environment
 	response, err := http.PostForm(
 		telegramApi,
 		url.Values{
-			"chat_id": {strconv.Itoa(chatId)},
+			"chat_id": {strconv.Itoa(credentials.ChatID)},
 			"text":    {text},
 		})
 
