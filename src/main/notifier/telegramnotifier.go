@@ -17,7 +17,7 @@ type TelegramCredentials struct {
 
 func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 	// Let's first read the `telegram-credentials.json` file
-	content, err := ioutil.ReadFile("./telegram-credentials.json")
+	content, err := ioutil.ReadFile(credentialsFile)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
