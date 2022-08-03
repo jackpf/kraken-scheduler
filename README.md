@@ -47,7 +47,6 @@ Example configuration:
 
 ```json
 {
-  "notify": "your-email@address.com", // optional - set this to receive email notifications
   "schedules": [
     {
       "cron":  "00 12 * * 1",

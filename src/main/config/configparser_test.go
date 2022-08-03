@@ -8,7 +8,6 @@ import (
 
 func TestParseConfigValid(t *testing.T) {
 	configuration := []byte(`{
-  "notify": "email@address.com",
   "schedules": [
     {
       "cron":  "* * * * *",
@@ -22,7 +21,6 @@ func TestParseConfigValid(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "email@address.com", config.NotifyEmailAddress)
 	assert.Len(t, config.Schedules, 1)
 	assert.Equal(t, "* * * * *", config.Schedules[0].Cron)
 	assert.Equal(t, "XXBTZEUR", config.Schedules[0].Pair)
