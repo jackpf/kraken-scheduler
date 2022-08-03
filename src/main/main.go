@@ -34,25 +34,25 @@ func main() {
 	}
 
 	krakenAPI := krakenapi.New(args.Key, args.Secret)
-	var notifiersInstance []*notifier.Notifier
+	var notifiers []*notifier.Notifier
 
 	if args.EmailCredentialsFile != "" {
 		var gmailer notifier.Notifier = notifier.MustNewGMailer(args.EmailCredentialsFile, "me", appConfig.NotifyEmailAddress)
-		notifiersInstance = append(notifiersInstance, &gmailer)
+		notifiers = append(notifiers, &gmailer)
 	} else {
 		log.Warn("--email-credentials not set, email notifications are disabled")
 	}
 
 	if args.TelegramCredentialsFile != "" {
 		var telegram notifier.Notifier = notifier.NewTelegramNotifier(args.TelegramCredentialsFile)
-		notifiersInstance = append(notifiersInstance, &telegram)
+		notifiers = append(notifiers, &telegram)
 
 	} else {
 		log.Warn("--telegram-credentials not set, telegram notifications are disabled")
 	}
 
 	apiInstance := api.NewApi(*appConfig, args.IsLive, krakenAPI)
-	schedulerInstance := scheduler.NewScheduler(*appConfig, apiInstance, notifiersInstance)
+	schedulerInstance := scheduler.NewScheduler(*appConfig, apiInstance, notifiers)
 
 	schedulerInstance.Run()
 }
