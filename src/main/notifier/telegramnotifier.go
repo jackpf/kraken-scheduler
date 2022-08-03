@@ -35,7 +35,7 @@ func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 // sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
 func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (string, error) {
 
-	log.Debug("Sending %s to chat_id: %d", text, credentials.chatId)
+	log.Debugf("Sending %s to chat_id: %d", text, credentials.chatId)
 
 	var telegramApi string = "https://api.telegram.org/bot" + credentials.token + "/sendMessage" // TODO get token from environment
 	response, err := http.PostForm(
@@ -46,19 +46,19 @@ func sendNotificationToTelegramChat(credentials TelegramCredentials, text string
 		})
 
 	if err != nil {
-		log.Debug("An Error ocurred while posting text to the chat: %s", err.Error())
+		log.Debugf("An Error ocurred while posting text to the chat: %s", err.Error())
 		return "", err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
-		log.Debug("Error in parsing telegram answer %s", errRead.Error())
+		log.Debugf("Error in parsing telegram answer %s", errRead.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
 
-	log.Debug("Body of Telegram Response: %s", bodyString)
+	log.Debugf("Body of Telegram Response: %s", bodyString)
 
 	return bodyString, nil
 }
