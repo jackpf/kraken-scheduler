@@ -37,7 +37,7 @@ func main() {
 	var notifiers []*notifier.Notifier
 
 	if args.EmailCredentialsFile != "" {
-		var gmailer notifier.Notifier = notifier.MustNewGMailer(args.EmailCredentialsFile, "me", appConfig.NotifyEmailAddress)
+		var gmailer notifier.Notifier = notifier.MustNewGMailer(args.EmailCredentialsFile, "me")
 		notifiers = append(notifiers, &gmailer)
 	} else {
 		log.Warn("--email-credentials not set, email notifications are disabled")

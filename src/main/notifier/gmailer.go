@@ -82,8 +82,8 @@ func getOrCreateToken(config *oauth2.Config, path string) *oauth2.Token {
 	return token
 }
 
-func MustNewGMailer(credentialsFile string, userId string, sendTo string) *GMailer {
-	gmailer, err := NewGMailer(credentialsFile, userId, sendTo)
+func MustNewGMailer(credentialsFile string, userId string) *GMailer {
+	gmailer, err := NewGMailer(credentialsFile, userId)
 
 	if err != nil {
 		log.Fatal(err)
@@ -92,7 +92,7 @@ func MustNewGMailer(credentialsFile string, userId string, sendTo string) *GMail
 	return gmailer
 }
 
-func NewGMailer(credentialsFile string, userId string, sendTo string) (*GMailer, error) {
+func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
 	ctx := context.Background()
 
 	credentials, err := readCredentials(credentialsFile)
@@ -123,26 +123,40 @@ func NewGMailer(credentialsFile string, userId string, sendTo string) (*GMailer,
 		return nil, err
 	}
 
-	return &GMailer{service: service, userId: userId, sendTo: sendTo}, nil
+	return &GMailer{service: service, userId: userId}, nil
 }
 
 type GMailer struct {
 	service *gmail.Service
 	userId  string
-	sendTo  string
+}
+
+func (m GMailer) getUserEmailAddress() (*string, error) {
+	profile, err := m.service.Users.GetProfile(m.userId).Do()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &profile.EmailAddress, nil
 }
 
 func (m GMailer) Send(subject string, body string) error {
 	var message gmail.Message
 
-	emailTo := fmt.Sprintf("To: %s\r\n", m.sendTo)
+	userEmailAddress, err := m.getUserEmailAddress()
+	if err != nil {
+		return err
+	}
+
+	emailTo := fmt.Sprintf("To: %s\r\n", *userEmailAddress)
 	emailSubject := fmt.Sprintf("Subject: %s\r\n", subject)
 	emailMime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
 	emailMessage := []byte(emailTo + emailSubject + emailMime + "\n" + body)
 
 	message.Raw = base64.URLEncoding.EncodeToString(emailMessage)
 
-	_, err := m.service.Users.Messages.Send(m.userId, &message).Do()
+	_, err = m.service.Users.Messages.Send(m.userId, &message).Do()
 
 	return err
 }
