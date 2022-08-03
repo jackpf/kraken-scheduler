@@ -2,12 +2,12 @@ package notifier
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type TelegramCredentials struct {
@@ -35,7 +35,7 @@ func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 // sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
 func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (string, error) {
 
-	fmt.Printf("Sending %s to chat_id: %d", text, credentials.chatId)
+	log.Debug("Sending %s to chat_id: %d", text, credentials.chatId)
 
 	var telegramApi string = "https://api.telegram.org/bot" + credentials.token + "/sendMessage" // TODO get token from environment
 	response, err := http.PostForm(
@@ -46,19 +46,19 @@ func sendNotificationToTelegramChat(credentials TelegramCredentials, text string
 		})
 
 	if err != nil {
-		fmt.Printf("An Error ocurred while posting text to the chat: %s", err.Error())
+		log.Debug("An Error ocurred while posting text to the chat: %s", err.Error())
 		return "", err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
-		fmt.Printf("Error in parsing telegram answer %s", errRead.Error())
+		log.Debug("Error in parsing telegram answer %s", errRead.Error())
 		return "", err
 	}
 	bodyString := string(bodyBytes)
 
-	fmt.Printf("Body of Telegram Response: %s", bodyString)
+	log.Debug("Body of Telegram Response: %s", bodyString)
 
 	return bodyString, nil
 }
