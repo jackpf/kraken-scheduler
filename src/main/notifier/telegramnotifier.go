@@ -68,7 +68,7 @@ type TelegramNotifier struct {
 }
 
 func NewTelegramNotifier(credentialsFile string) *TelegramNotifier {
-	var credentials TelegramCredentials = readTelegramCredentials(credentialsFile)
+	credentials := readTelegramCredentials(credentialsFile)
 	return &TelegramNotifier{credentials: credentials}
 }
 
