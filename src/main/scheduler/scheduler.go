@@ -72,15 +72,7 @@ func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []er
 		transactionIds,
 	)
 
-	var errors []error
-	for _, notifier := range s.notifiers {
-		var err = (*notifier).Send(notification.Subject(), notification.Body())
-		if err != nil {
-			errors = append(errors, err)
-		}
-	}
-
-	return errors
+	return s.send(notification)
 }
 
 func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) []error {
@@ -96,6 +88,11 @@ func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krake
 		transactionId,
 		completedOrder,
 	)
+
+	return s.send(notification)
+}
+
+func (s *Scheduler) send(notification notificationtemplates.NotificationTemplate) []error {
 
 	var errors []error
 	for _, notifier := range s.notifiers {
