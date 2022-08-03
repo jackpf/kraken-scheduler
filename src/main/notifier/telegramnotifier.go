@@ -36,11 +36,10 @@ func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 }
 
 func apiCall(path string, parameters url.Values) (map[string]interface{}, error) {
-	fmt.Printf("Path: %s", path)
 	response, err := http.PostForm(path, parameters)
 
 	if err != nil {
-		log.Printf("An Error occurred while posting text to the chat: %s", err.Error())
+		log.Debugf("An Error occurred while posting text to the chat: %s", err.Error())
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -61,7 +60,7 @@ func apiCall(path string, parameters url.Values) (map[string]interface{}, error)
 		return nil, fmt.Errorf("telegram API call failed: %+v", jsonBody)
 	}
 
-	log.Printf("Telegram Response: %+v", jsonBody)
+	log.Debugf("Telegram Response: %+v", jsonBody)
 
 	return jsonBody, nil
 }

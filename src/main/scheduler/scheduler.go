@@ -57,6 +57,14 @@ func (s *Scheduler) liveLogTag() string {
 	return "TEST"
 }
 
+func (s *Scheduler) logErrors(errs []error) {
+	if errs != nil {
+		for _, err := range errs {
+			log.Error(err.Error())
+		}
+	}
+}
+
 func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []error {
 	if len(s.notifiers) == 0 {
 		log.Warn("Notifications not configured, not notifying")
@@ -72,7 +80,7 @@ func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []er
 		transactionIds,
 	)
 
-	return s.send(notification)
+	return s.notify(notification)
 }
 
 func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) []error {
@@ -89,10 +97,26 @@ func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krake
 		completedOrder,
 	)
 
-	return s.send(notification)
+	return s.notify(notification)
 }
 
-func (s *Scheduler) send(notification notificationtemplates.NotificationTemplate) []error {
+func (s *Scheduler) notifyError(order model.Order, err error) []error {
+	if len(s.notifiers) == 0 {
+		log.Warn("Notifications not configured, not notifying")
+		return nil
+	}
+
+	notification := notificationtemplates.NewErrorNotification(
+		order.Pair,
+		order.Amount(),
+		order.FiatAmount,
+		err,
+	)
+
+	return s.notify(notification)
+}
+
+func (s *Scheduler) notify(notification notificationtemplates.NotificationTemplate) []error {
 
 	var errors []error
 	for _, notifier := range s.notifiers {
@@ -113,6 +137,9 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	order, err := s.api.CreateOrder(schedule)
 	if err != nil {
 		log.Errorf("Unable to create order: %s", err.Error())
+		errors := s.notifyError(*order, err)
+		s.logErrors(errors)
+
 		return
 	}
 
@@ -120,6 +147,9 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	transactionIds, err := s.api.SubmitOrder(*order)
 	if err != nil {
 		log.Errorf("Unable to submit order: %s", err.Error())
+		errors := s.notifyError(*order, err)
+		s.logErrors(errors)
+
 		return
 	}
 
@@ -131,12 +161,7 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
 
 	var errors = s.notifyOrder(*order, transactionIds)
-
-	if errors != nil {
-		for _, err := range errors {
-			log.Errorf("Unable to notify of completed order: %s", err.Error())
-		}
-	}
+	s.logErrors(errors)
 
 	for _, transactionId := range transactionIds {
 		for { // TODO perform in background & have max attempts
@@ -150,12 +175,8 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 				log.Infof("Order %s was successfully completed", transactionId)
 
 				var errors = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
+				s.logErrors(errors)
 
-				if errors != nil {
-					for _, err := range errors {
-						log.Errorf("Unable to notify of completed order: %s", err.Error())
-					}
-				}
 				break
 			} else {
 				log.Infof("Order %s is pending...", transactionId)
