@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -10,57 +11,59 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	telegramApiBasePath        = "https://api.telegram.org/bot"
+	telegramApiSendMessagePath = telegramApiBasePath + "%s/sendMessage"
+)
+
 type TelegramCredentials struct {
 	token  string
 	chatId int
 }
 
 func readTelegramCredentials(credentialsFile string) TelegramCredentials {
-	// Let's first read the `telegram-credentials.json` file
 	content, err := ioutil.ReadFile(credentialsFile)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
 
-	// Now let's unmarshall the data into `payload`
 	var credentials TelegramCredentials
-	err = json.Unmarshal(content, &credentials)
-	if err != nil {
-		log.Fatal("Error during Unmarshal(): ", err)
+	if err = json.Unmarshal(content, &credentials); err != nil {
+		log.Fatal("Unable to parse credentials file: ", err)
 	}
 
 	return credentials
 }
 
-// sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
-func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (string, error) {
-
-	log.Debug("Sending %s to chat_id: %d", text, credentials.chatId)
-
-	var telegramApi string = "https://api.telegram.org/bot" + credentials.token + "/sendMessage" // TODO get token from environment
-	response, err := http.PostForm(
-		telegramApi,
-		url.Values{
-			"chat_id": {strconv.Itoa(credentials.chatId)},
-			"text":    {text},
-		})
+func apiCall(path string, parameters url.Values) (*string, error) {
+	response, err := http.PostForm(path, parameters)
 
 	if err != nil {
-		log.Debug("An Error ocurred while posting text to the chat: %s", err.Error())
-		return "", err
+		log.Debug("An Error occurred while posting text to the chat: %s", err.Error())
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
 		log.Debug("Error in parsing telegram answer %s", errRead.Error())
-		return "", err
+		return nil, err
 	}
 	bodyString := string(bodyBytes)
 
 	log.Debug("Body of Telegram Response: %s", bodyString)
 
-	return bodyString, nil
+	return &bodyString, nil
+}
+
+// sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
+func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (*string, error) {
+	log.Debugf("Sending %s to chat_id: %d", text, credentials.chatId)
+
+	return apiCall(fmt.Sprintf(telegramApiSendMessagePath, credentials.token), url.Values{
+		"chat_id": {strconv.Itoa(credentials.chatId)},
+		"text":    {text},
+	})
 }
 
 type TelegramNotifier struct {
