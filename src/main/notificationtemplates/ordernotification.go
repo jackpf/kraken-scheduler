@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func NewOrderNotification(isLive bool, pair string, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) OrderNotification {
+func NewOrderNotification(isLive bool, pair string, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) NotificationTemplate {
 	return OrderNotification{isLive: isLive, pair: pair, amount: amount, orderPrice: orderPrice, assetPrice: assetPrice, transactionIds: transactionIds}
 }
 

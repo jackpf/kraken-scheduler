@@ -20,6 +20,7 @@ for incorrectly placed orders.
 - You must create a Kraken API key to run the scheduler, see https://support.kraken.com/hc/en-us/articles/360000919966-How-to-generate-an-API-key-pair-
 - Required permissions are `Query funds`, `Query open orders & trades`, `Query closed orders & trades` and `Create and modify orders` for the application to run correctly
 - In order to receive email notifications, you must create your own GMail OAuth credentials, see https://developers.google.com/identity/protocols/oauth2
+- In order to receive telegram notifications, you must create your own Telegram Bot, see [Telegram Notifications](#telegram-notifications)
 
 ## Installation from binaries
 
@@ -77,7 +78,7 @@ Here is a detailed explanation of each schedule parameter:
 Run with:
 
 ```shell
-kraken-scheduler --key KEY --secret SECRET --config CONFIG [--credentials CREDENTIALS] [--live]
+kraken-scheduler --key KEY --secret SECRET --config CONFIG [--email-credentials CREDENTIALS] [--telegram-credentials] [--live]
 ```
 
 Note that by default the application runs in test mode, and doesn't create real orders.
@@ -87,3 +88,35 @@ This is useful to validate that you've configured things correctly, and the purc
 To place real orders, you must pass `--live` when running.
 
 Run `kraken-scheduler --help` for a description of all arguments.
+
+## Telegram Notifications
+
+To recieve telegram notifications every time there is an order, follow these steps:
+
+1. Register your bot in Telegram by sending the @BotFather user a /newbot command.
+2. You will get a Token back, save it in a safe place.
+3. Check that the bot creation worked by running:
+
+  ```shell
+  TELEGRAM_TOKEN="my-secret-token"
+  curl https://api.telegram.org/bot$TELEGRAM_TOKEN/getMe
+  ```
+
+4. Create a new telegram group and invite your recently created bot.
+5. Get the id of your group by running:
+
+  ```shell
+  TELEGRAM_TOKEN="my-secret-token"
+  https://api.telegram.org/bot<YourBOTToken>/getUpdates
+  ```
+
+6. Create a json file with the following format:
+
+  ```json
+  {
+	  "token": "my-secret-token",
+	  "chatId": 1234567
+  }
+  ```
+
+7. Pass the json file as absolute path to the flag --telegram-credentials.

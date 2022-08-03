@@ -22,3 +22,6 @@ target
 config.json
 credentials.json
 token.json
+
+# Visual Studio Code
+.vscode/
