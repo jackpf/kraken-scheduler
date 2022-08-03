@@ -80,9 +80,27 @@ type TelegramNotifier struct {
 	credentials TelegramCredentials
 }
 
-func NewTelegramNotifier(credentialsFile string) *TelegramNotifier {
+func MustNewTelegramNotifier(credentialsFile string) *TelegramNotifier {
+	notifier, err := NewTelegramNotifier(credentialsFile)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return notifier
+}
+
+func NewTelegramNotifier(credentialsFile string) (*TelegramNotifier, error) {
 	credentials := readTelegramCredentials(credentialsFile)
-	return &TelegramNotifier{credentials: credentials}
+
+	if credentials.Token == "" {
+		return nil, fmt.Errorf("telegram token must be configured")
+	}
+	if credentials.ChatId == 0 {
+		return nil, fmt.Errorf("telegram chatId must be configured")
+	}
+
+	return &TelegramNotifier{credentials: credentials}, nil
 }
 
 func (m TelegramNotifier) Send(subject string, body string) error {
