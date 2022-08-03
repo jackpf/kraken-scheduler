@@ -39,19 +39,19 @@ func apiCall(path string, parameters url.Values) (*string, error) {
 	response, err := http.PostForm(path, parameters)
 
 	if err != nil {
-		log.Debug("An Error occurred while posting text to the chat: %s", err.Error())
+		log.Debugf("An Error occurred while posting text to the chat: %s", err.Error())
 		return nil, err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
-		log.Debug("Error in parsing telegram answer %s", errRead.Error())
+		log.Debugf("Error in parsing telegram answer %s", errRead.Error())
 		return nil, err
 	}
 	bodyString := string(bodyBytes)
 
-	log.Debug("Body of Telegram Response: %s", bodyString)
+	log.Debugf("Body of Telegram Response: %s", bodyString)
 
 	return &bodyString, nil
 }
