@@ -44,9 +44,8 @@ func main() {
 	}
 
 	if args.TelegramCredentialsFile != "" {
-		var telegram notifier.Notifier = notifier.NewTelegramNotifier(args.TelegramCredentialsFile)
+		var telegram notifier.Notifier = notifier.MustNewTelegramNotifier(args.TelegramCredentialsFile)
 		notifiers = append(notifiers, &telegram)
-
 	} else {
 		log.Warn("--telegram-credentials not set, telegram notifications are disabled")
 	}

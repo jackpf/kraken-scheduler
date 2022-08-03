@@ -17,8 +17,8 @@ const (
 )
 
 type TelegramCredentials struct {
-	token  string
-	chatId int
+	Token  string `json:"token"`
+	ChatId int    `json:"chatId"`
 }
 
 func readTelegramCredentials(credentialsFile string) TelegramCredentials {
@@ -35,11 +35,12 @@ func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 	return credentials
 }
 
-func apiCall(path string, parameters url.Values) (*string, error) {
+func apiCall(path string, parameters url.Values) (map[string]interface{}, error) {
+	fmt.Printf("Path: %s", path)
 	response, err := http.PostForm(path, parameters)
 
 	if err != nil {
-		log.Debugf("An Error occurred while posting text to the chat: %s", err.Error())
+		log.Printf("An Error occurred while posting text to the chat: %s", err.Error())
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -49,19 +50,28 @@ func apiCall(path string, parameters url.Values) (*string, error) {
 		log.Debugf("Error in parsing telegram answer %s", errRead.Error())
 		return nil, err
 	}
-	bodyString := string(bodyBytes)
 
-	log.Debugf("Body of Telegram Response: %s", bodyString)
+	var jsonBody map[string]interface{}
+	err = json.Unmarshal(bodyBytes, &jsonBody)
+	if err != nil {
+		return nil, err
+	}
 
-	return &bodyString, nil
+	if ok, hasOk := jsonBody["ok"]; !hasOk || ok.(bool) == false {
+		return nil, fmt.Errorf("telegram API call failed: %+v", jsonBody)
+	}
+
+	log.Printf("Telegram Response: %+v", jsonBody)
+
+	return jsonBody, nil
 }
 
 // sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
-func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (*string, error) {
-	log.Debugf("Sending %s to chat_id: %d", text, credentials.chatId)
+func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (map[string]interface{}, error) {
+	log.Debugf("Sending %s to chat_id: %d", text, credentials.ChatId)
 
-	return apiCall(fmt.Sprintf(telegramApiSendMessagePath, credentials.token), url.Values{
-		"chat_id": {strconv.Itoa(credentials.chatId)},
+	return apiCall(fmt.Sprintf(telegramApiSendMessagePath, credentials.Token), url.Values{
+		"chat_id": {strconv.Itoa(credentials.ChatId)},
 		"text":    {text},
 	})
 }
@@ -70,12 +80,30 @@ type TelegramNotifier struct {
 	credentials TelegramCredentials
 }
 
-func NewTelegramNotifier(credentialsFile string) *TelegramNotifier {
+func MustNewTelegramNotifier(credentialsFile string) *TelegramNotifier {
+	notifier, err := NewTelegramNotifier(credentialsFile)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return notifier
+}
+
+func NewTelegramNotifier(credentialsFile string) (*TelegramNotifier, error) {
 	credentials := readTelegramCredentials(credentialsFile)
-	return &TelegramNotifier{credentials: credentials}
+
+	if credentials.Token == "" {
+		return nil, fmt.Errorf("telegram token must be configured")
+	}
+	if credentials.ChatId == 0 {
+		return nil, fmt.Errorf("telegram chatId must be configured")
+	}
+
+	return &TelegramNotifier{credentials: credentials}, nil
 }
 
 func (m TelegramNotifier) Send(subject string, body string) error {
-	_, err := sendNotificationToTelegramChat(m.credentials, body)
+	_, err := sendNotificationToTelegramChat(m.credentials, fmt.Sprintf("%s\n\n%s", subject, body))
 	return err
 }
