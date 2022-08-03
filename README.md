@@ -78,7 +78,7 @@ Here is a detailed explanation of each schedule parameter:
 Run with:
 
 ```shell
-kraken-schedule --key KEY --secret SECRET --config CONFIG [--email-credentials CREDENTIALS] [--telegram-credentials] [--live]
+kraken-scheduler --key KEY --secret SECRET --config CONFIG [--email-credentials CREDENTIALS] [--telegram-credentials] [--live]
 ```
 
 Note that by default the application runs in test mode, and doesn't create real orders.
@@ -87,7 +87,7 @@ This is useful to validate that you've configured things correctly, and the purc
 
 To place real orders, you must pass `--live` when running.
 
-Run `kraken-schedule --help` for a description of all arguments.
+Run `kraken-scheduler --help` for a description of all arguments.
 
 ## Telegram Notifications
 
