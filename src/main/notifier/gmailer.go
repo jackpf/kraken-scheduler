@@ -102,7 +102,7 @@ func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
 		return nil, err
 	}
 
-	// If modifying these scopes, delete your previously saved Token.json.
+	// If modifying these scopes, delete your previously saved token.json.
 	config, err := google.ConfigFromJSON(*credentials, gmail.GmailSendScope, gmail.GmailComposeScope)
 
 	if err != nil {
