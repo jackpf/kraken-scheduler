@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -26,11 +27,11 @@ func readCredentials(credentialsFile string) (*[]byte, error) {
 	return &credentials, nil
 }
 
-// Request a token from the web, then returns the retrieved token.
+// Request a Token from the web, then returns the retrieved Token.
 func tokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	authURL := config.AuthCodeURL("state-Token", oauth2.AccessTypeOffline)
 	fmt.Printf("Go to the following link in your browser then type the "+
-		"authorization code: \n%v\n", authURL)
+		"authorization code from the URL (code=..., paste the ... part): \n%v\n", authURL)
 
 	var authCode string
 	if _, err := fmt.Scan(&authCode); err != nil {
@@ -39,12 +40,12 @@ func tokenFromWeb(config *oauth2.Config) *oauth2.Token {
 
 	tok, err := config.Exchange(context.TODO(), authCode)
 	if err != nil {
-		log.Fatalf("Unable to retrieve token from web: %v", err)
+		log.Fatalf("Unable to retrieve Token from web: %v", err)
 	}
 	return tok
 }
 
-// Retrieves a token from a local file.
+// Retrieves a Token from a local file.
 func tokenFromFile(file string) (*oauth2.Token, error) {
 	f, err := os.Open(file)
 	if err != nil {
@@ -56,23 +57,23 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	return tok, err
 }
 
-// Saves a token to a file path.
+// Saves a Token to a file path.
 func saveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
+	log.Debugf("Saving credential file to: %s\n", path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		log.Fatalf("Unable to cache oauth token: %v", err)
+		log.Fatalf("Unable to cache oauth Token: %v", err)
 	}
 	defer f.Close()
 	json.NewEncoder(f).Encode(token)
 }
 
-// Retrieve a token, saves the token
+// Retrieve a Token, saves the Token
 func getOrCreateToken(config *oauth2.Config, path string) *oauth2.Token {
-	// The file token.json stores the user's access and refresh tokens, and is
+	// The file Token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokenFile := fmt.Sprintf("%s/%s", path, "token.json")
+	tokenFile := fmt.Sprintf("%s/%s", path, "Token.json")
 	token, err := tokenFromFile(tokenFile)
 	if err != nil {
 		token = tokenFromWeb(config)
@@ -102,7 +103,7 @@ func NewGMailer(credentialsFile string, userId string) (*GMailer, error) {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(*credentials, gmail.GmailSendScope)
+	config, err := google.ConfigFromJSON(*credentials, gmail.GmailSendScope, gmail.GmailComposeScope)
 
 	if err != nil {
 		return nil, err
@@ -131,17 +132,32 @@ type GMailer struct {
 	userId  string
 }
 
-func (m GMailer) Send(to string, subject string, body string) error {
+func (m GMailer) getUserEmailAddress() (*string, error) {
+	profile, err := m.service.Users.GetProfile(m.userId).Do()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &profile.EmailAddress, nil
+}
+
+func (m GMailer) Send(subject string, body string) error {
 	var message gmail.Message
 
-	emailTo := fmt.Sprintf("To: %s\r\n", to)
+	userEmailAddress, err := m.getUserEmailAddress()
+	if err != nil {
+		return err
+	}
+
+	emailTo := fmt.Sprintf("To: %s\r\n", *userEmailAddress)
 	emailSubject := fmt.Sprintf("Subject: %s\r\n", subject)
 	emailMime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
 	emailMessage := []byte(emailTo + emailSubject + emailMime + "\n" + body)
 
 	message.Raw = base64.URLEncoding.EncodeToString(emailMessage)
 
-	_, err := m.service.Users.Messages.Send(m.userId, &message).Do()
+	_, err = m.service.Users.Messages.Send(m.userId, &message).Do()
 
 	return err
 }

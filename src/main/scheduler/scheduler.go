@@ -8,39 +8,39 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jackpf/kraken-schedule/src/main/util"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 
-	"github.com/jackpf/kraken-schedule/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
 
-	"github.com/jackpf/kraken-schedule/src/main/api"
+	"github.com/jackpf/kraken-scheduler/src/main/api"
 
-	"github.com/jackpf/kraken-schedule/src/main/scheduler/model"
+	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 
 	"github.com/go-co-op/gocron"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jackpf/kraken-schedule/src/main/notifier"
+	"github.com/jackpf/kraken-scheduler/src/main/notifier"
 
 	krakenapi "github.com/beldur/kraken-go-api-client"
-	configmodel "github.com/jackpf/kraken-schedule/src/main/config/model"
+	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
-func NewScheduler(appConfig configmodel.Config, api api.Api, notifier *notifier.Notifier) Scheduler {
+func NewScheduler(appConfig configmodel.Config, api api.Api, notifiers []*notifier.Notifier) Scheduler {
 	return Scheduler{
-		config:   appConfig,
-		api:      api,
-		cron:     gocron.NewScheduler(time.Now().Location()),
-		notifier: notifier,
+		config:    appConfig,
+		api:       api,
+		cron:      gocron.NewScheduler(time.Now().Location()),
+		notifiers: notifiers,
 	}
 }
 
 type Scheduler struct {
-	config   configmodel.Config
-	api      api.Api
-	cron     *gocron.Scheduler
-	notifier *notifier.Notifier
-	jobs     []struct {
+	config    configmodel.Config
+	api       api.Api
+	cron      *gocron.Scheduler
+	notifiers []*notifier.Notifier
+	jobs      []struct {
 		configmodel.Schedule
 		*gocron.Job
 	}
@@ -57,8 +57,16 @@ func (s *Scheduler) liveLogTag() string {
 	return "TEST"
 }
 
-func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) error {
-	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
+func (s *Scheduler) logErrors(errs []error) {
+	if errs != nil {
+		for _, err := range errs {
+			log.Error(err.Error())
+		}
+	}
+}
+
+func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []error {
+	if len(s.notifiers) == 0 {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
@@ -72,27 +80,11 @@ func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) erro
 		transactionIds,
 	)
 
-	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
+	return s.notify(notification)
 }
 
-func (s *Scheduler) notifyError(order model.Order, err error) error {
-	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
-		log.Warn("Notifications not configured, not notifying")
-		return nil
-	}
-
-	notification := notificationtemplates.NewErrorNotification(
-		order.Pair,
-		order.Amount(),
-		order.FiatAmount,
-		err,
-	)
-
-	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
-}
-
-func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) error {
-	if s.notifier == nil || s.config.NotifyEmailAddress == "" {
+func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) []error {
+	if len(s.notifiers) == 0 {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
@@ -105,7 +97,36 @@ func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krake
 		completedOrder,
 	)
 
-	return (*s.notifier).Send(s.config.NotifyEmailAddress, notification.Subject(), notification.Body())
+	return s.notify(notification)
+}
+
+func (s *Scheduler) notifyError(order model.Order, err error) []error {
+	if len(s.notifiers) == 0 {
+		log.Warn("Notifications not configured, not notifying")
+		return nil
+	}
+
+	notification := notificationtemplates.NewErrorNotification(
+		order.Pair,
+		order.Amount(),
+		order.FiatAmount,
+		err,
+	)
+
+	return s.notify(notification)
+}
+
+func (s *Scheduler) notify(notification notificationtemplates.NotificationTemplate) []error {
+
+	var errors []error
+	for _, notifier := range s.notifiers {
+		var err = (*notifier).Send(notification.Subject(), notification.Body())
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	return errors
 }
 
 func (s *Scheduler) process(schedule configmodel.Schedule) {
@@ -116,10 +137,9 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	order, err := s.api.CreateOrder(schedule)
 	if err != nil {
 		log.Errorf("Unable to create order: %s", err.Error())
-		err = s.notifyError(*order, err)
-		if err != nil {
-			log.Errorf("Unable to notify of error: %s", err.Error())
-		}
+		errors := s.notifyError(*order, err)
+		s.logErrors(errors)
+
 		return
 	}
 
@@ -127,10 +147,9 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	transactionIds, err := s.api.SubmitOrder(*order)
 	if err != nil {
 		log.Errorf("Unable to submit order: %s", err.Error())
-		err = s.notifyError(*order, err)
-		if err != nil {
-			log.Errorf("Unable to notify of error: %s", err.Error())
-		}
+		errors := s.notifyError(*order, err)
+		s.logErrors(errors)
+
 		return
 	}
 
@@ -141,10 +160,8 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 
 	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
 
-	err = s.notifyOrder(*order, transactionIds)
-	if err != nil {
-		log.Errorf("Unable to notify of order: %s", err.Error())
-	}
+	var errors = s.notifyOrder(*order, transactionIds)
+	s.logErrors(errors)
 
 	for _, transactionId := range transactionIds {
 		for { // TODO perform in background & have max attempts
@@ -157,10 +174,9 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 			if completedOrder != nil {
 				log.Infof("Order %s was successfully completed", transactionId)
 
-				err = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
-				if err != nil {
-					log.Errorf("Unable to notify of completed order: %s", err.Error())
-				}
+				var errors = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
+				s.logErrors(errors)
+
 				break
 			} else {
 				log.Infof("Order %s is pending...", transactionId)
