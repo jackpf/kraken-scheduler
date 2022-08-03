@@ -58,7 +58,7 @@ func (s *Scheduler) liveLogTag() string {
 }
 
 func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []error {
-	if s.notifiers == nil {
+	if len(s.notifiers) == 0 {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
@@ -84,7 +84,7 @@ func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []er
 }
 
 func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) []error {
-	if s.notifiers == nil {
+	if len(s.notifiers) == 0 {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
