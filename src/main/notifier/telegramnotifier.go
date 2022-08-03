@@ -11,8 +11,8 @@ import (
 )
 
 type TelegramCredentials struct {
-	Token  string
-	ChatID int
+	token  string
+	chatId int
 }
 
 func readTelegramCredentials(credentialsFile string) TelegramCredentials {
@@ -35,13 +35,13 @@ func readTelegramCredentials(credentialsFile string) TelegramCredentials {
 // sendNotificationToTelegramChat sends a text message to the Telegram chat identified by its chat Id
 func sendNotificationToTelegramChat(credentials TelegramCredentials, text string) (string, error) {
 
-	fmt.Printf("Sending %s to chat_id: %d", text, credentials.ChatID)
+	fmt.Printf("Sending %s to chat_id: %d", text, credentials.chatId)
 
-	var telegramApi string = "https://api.telegram.org/bot" + credentials.Token + "/sendMessage" // TODO get token from environment
+	var telegramApi string = "https://api.telegram.org/bot" + credentials.token + "/sendMessage" // TODO get token from environment
 	response, err := http.PostForm(
 		telegramApi,
 		url.Values{
-			"chat_id": {strconv.Itoa(credentials.ChatID)},
+			"chat_id": {strconv.Itoa(credentials.chatId)},
 			"text":    {text},
 		})
 

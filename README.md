@@ -114,8 +114,8 @@ To recieve telegram notifications every time there is an order, follow these ste
 
   ```json
   {
-	  "Token": "my-secret-token",
-	  "ChatID": 1234567
+	  "token": "my-secret-token",
+	  "chatId": 1234567
   }
   ```
 
