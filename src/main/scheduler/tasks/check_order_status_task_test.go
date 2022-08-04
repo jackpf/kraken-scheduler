@@ -27,7 +27,7 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	api.On("TransactionStatus", "1").Return(&mockCompletedOrder1, nil)
 	api.On("TransactionStatus", "2").Return(&mockCompletedOrder2, nil)
 
-	result, errs := task.Notifications(&taskData)
+	result, errs := task.Notifications(taskData)
 
 	for _, err := range errs {
 		assert.NoError(t, err)
@@ -68,7 +68,7 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 	api.On("TransactionStatus", "2").Return(&mockCompletedOrder2, fmt.Errorf("mock error"))
 	api.On("TransactionStatus", "3").Return(&mockCompletedOrder3, nil)
 
-	result, errs := task.Notifications(&taskData)
+	result, errs := task.Notifications(taskData)
 
 	assert.Equal(t, []notifications.Notification{
 		notifications.NewPurchaseNotification(

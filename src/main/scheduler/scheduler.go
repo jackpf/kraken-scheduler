@@ -98,14 +98,14 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	taskData := model.TaskData{Schedule: schedule}
 
 	for _, task := range s.tasks {
-		taskData, err := task.Run(&taskData)
+		err := task.Run(&taskData)
 		if err != nil {
-			s.notifyError(*taskData, err)
+			s.notifyError(taskData, err)
 		}
 
 		notifications, errs := task.Notifications(taskData)
 		for _, err := range errs {
-			s.logErrors(s.notifyError(*taskData, err))
+			s.logErrors(s.notifyError(taskData, err))
 		}
 		for _, notification := range notifications {
 			s.logErrors(s.notify(notification))

@@ -16,11 +16,11 @@ type CheckOrderStatusTask struct {
 	api api.Api
 }
 
-func (t CheckOrderStatusTask) Run(taskData *model.TaskData) (*model.TaskData, error) {
-	return taskData, nil
+func (t CheckOrderStatusTask) Run(taskData *model.TaskData) error {
+	return nil
 }
 
-func (t CheckOrderStatusTask) Notifications(taskData *model.TaskData) ([]notifications.Notification, []error) {
+func (t CheckOrderStatusTask) Notifications(taskData model.TaskData) ([]notifications.Notification, []error) {
 	var notificationsList []notifications.Notification
 	var errs []error
 
