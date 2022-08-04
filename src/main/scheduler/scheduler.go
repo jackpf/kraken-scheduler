@@ -166,7 +166,7 @@ func (s *Scheduler) runUi() {
 
 			completedRatio := float64(time.Now().Unix()-lastRunTime) / float64(job.NextRun().Unix()-lastRunTime)
 
-			logOutput := util.PadLine(fmt.Sprintf("Purchasing %s in %s", job.Pair, util.PrettyDuration(time.Until(job.NextRun()))), 60)
+			logOutput := util.PadLine(fmt.Sprintf("Purchasing %s in %s", job.Pair, util.PrettyDuration(time.Until(job.NextRun()))), 80)
 			fmt.Printf("%s%s\n", logOutput, util.ProgressBar(completedRatio, 30))
 		}
 		lastJobRuns = s.jobRuns
