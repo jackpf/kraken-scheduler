@@ -20,7 +20,7 @@ target
 
 .idea/
 config.json
-credentials.json
+*credentials.json
 token.json
 
 # Visual Studio Code

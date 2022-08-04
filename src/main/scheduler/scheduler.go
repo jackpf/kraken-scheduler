@@ -2,15 +2,15 @@ package scheduler
 
 import (
 	"fmt"
+	"github.com/jackpf/kraken-scheduler/src/main/scheduler/tasks"
 	"reflect"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/jackpf/kraken-scheduler/src/main/util"
 
-	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 
 	"github.com/jackpf/kraken-scheduler/src/main/api"
 
@@ -28,9 +28,14 @@ import (
 
 func NewScheduler(appConfig configmodel.Config, api api.Api, notifiers []*notifier.Notifier) Scheduler {
 	return Scheduler{
-		config:    appConfig,
-		api:       api,
-		cron:      gocron.NewScheduler(time.Now().Location()),
+		config: appConfig,
+		api:    api,
+		cron:   gocron.NewScheduler(time.Now().Location()),
+		tasks: []tasks.Task{
+			tasks.NewCreateOrderTask(api),
+			tasks.NewSubmitOrderTask(api),
+			tasks.NewCheckOrderStatusTask(api),
+		},
 		notifiers: notifiers,
 	}
 }
@@ -39,6 +44,7 @@ type Scheduler struct {
 	config    configmodel.Config
 	api       api.Api
 	cron      *gocron.Scheduler
+	tasks     []tasks.Task
 	notifiers []*notifier.Notifier
 	jobs      []struct {
 		configmodel.Schedule
@@ -50,13 +56,6 @@ type Scheduler struct {
 	jobRuns   uint64
 }
 
-func (s *Scheduler) liveLogTag() string {
-	if s.api.IsLive() {
-		return "LIVE"
-	}
-	return "TEST"
-}
-
 func (s *Scheduler) logErrors(errs []error) {
 	if errs != nil {
 		for _, err := range errs {
@@ -65,59 +64,21 @@ func (s *Scheduler) logErrors(errs []error) {
 	}
 }
 
-func (s *Scheduler) notifyOrder(order model.Order, transactionIds []string) []error {
+func (s *Scheduler) notifyError(taskData model.TaskData, err error) []error {
 	if len(s.notifiers) == 0 {
 		log.Warn("Notifications not configured, not notifying")
 		return nil
 	}
 
-	notification := notificationtemplates.NewOrderNotification(
-		s.api.IsLive(),
-		order.Pair,
-		order.Amount(),
-		order.FiatAmount,
-		order.Price,
-		transactionIds,
-	)
-
-	return s.notify(notification)
-}
-
-func (s *Scheduler) notifyCompletedTrade(order model.Order, completedOrder krakenapi.Order, transactionId string) []error {
-	if len(s.notifiers) == 0 {
-		log.Warn("Notifications not configured, not notifying")
-		return nil
-	}
-
-	notification := notificationtemplates.NewPurchaseNotification(
-		order.Pair,
-		order.Amount(),
-		order.FiatAmount,
-		transactionId,
-		completedOrder,
-	)
-
-	return s.notify(notification)
-}
-
-func (s *Scheduler) notifyError(order model.Order, err error) []error {
-	if len(s.notifiers) == 0 {
-		log.Warn("Notifications not configured, not notifying")
-		return nil
-	}
-
-	notification := notificationtemplates.NewErrorNotification(
-		order.Pair,
-		order.Amount(),
-		order.FiatAmount,
+	notification := notifications.NewErrorNotification(
+		taskData.Schedule,
 		err,
 	)
 
 	return s.notify(notification)
 }
 
-func (s *Scheduler) notify(notification notificationtemplates.NotificationTemplate) []error {
-
+func (s *Scheduler) notify(notification notifications.Notification) []error {
 	var errors []error
 	for _, notifier := range s.notifiers {
 		var err = (*notifier).Send(notification.Subject(), notification.Body())
@@ -134,54 +95,20 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	defer s.mutex.Unlock()
 	atomic.AddUint64(&s.jobRuns, 1)
 
-	order, err := s.api.CreateOrder(schedule)
-	if err != nil {
-		log.Errorf("Unable to create order: %s", err.Error())
-		errors := s.notifyError(*order, err)
-		s.logErrors(errors)
+	taskData := model.TaskData{Schedule: schedule}
 
-		return
-	}
+	for _, task := range s.tasks {
+		taskData, err := task.Run(&taskData)
+		if err != nil {
+			s.notifyError(*taskData, err)
+		}
 
-	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...", s.liveLogTag(), s.api.FormatAmount(order.Amount()), order.Pair, order.FiatAmount, order.Pair, order.Price)
-	transactionIds, err := s.api.SubmitOrder(*order)
-	if err != nil {
-		log.Errorf("Unable to submit order: %s", err.Error())
-		errors := s.notifyError(*order, err)
-		s.logErrors(errors)
-
-		return
-	}
-
-	transactionIdsString := strings.Join(transactionIds[:], ", ")
-	if !s.api.IsLive() {
-		transactionIdsString = "<no transaction IDs for test orders>"
-	}
-
-	log.Infof("[%s] Order placed: %s", s.liveLogTag(), transactionIdsString)
-
-	var errors = s.notifyOrder(*order, transactionIds)
-	s.logErrors(errors)
-
-	for _, transactionId := range transactionIds {
-		for { // TODO perform in background & have max attempts
-			completedOrder, err := s.api.TransactionStatus(transactionId)
-
-			if err != nil {
-				log.Errorf("Unable to check transaction status: %s", err.Error())
-			}
-
-			if completedOrder != nil {
-				log.Infof("Order %s was successfully completed", transactionId)
-
-				var errors = s.notifyCompletedTrade(*order, *completedOrder, transactionId)
-				s.logErrors(errors)
-
-				break
-			} else {
-				log.Infof("Order %s is pending...", transactionId)
-				time.Sleep(1 * time.Second)
-			}
+		notifications, errs := task.Notifications(taskData)
+		for _, err := range errs {
+			s.logErrors(s.notifyError(*taskData, err))
+		}
+		for _, notification := range notifications {
+			s.logErrors(s.notify(notification))
 		}
 	}
 
@@ -219,7 +146,7 @@ func (s *Scheduler) findJob(schedule configmodel.Schedule) *struct {
 	return nil
 }
 
-func (s *Scheduler) printJobTimeDiffs() {
+func (s *Scheduler) runUi() {
 	first := true
 	lastJobRuns := uint64(0)
 
@@ -277,7 +204,7 @@ func (s *Scheduler) Run() {
 		log.Infof("Created schedule for %s, purchase will occur at %+v", job.Pair, job.NextRun())
 	}
 
-	go s.printJobTimeDiffs()
+	go s.runUi()
 
 	s.cron.StartBlocking()
 }
