@@ -18,8 +18,8 @@ func TestCreateOrderTask_Run(t *testing.T) {
 
 	api.On("CreateOrder", taskData.Schedule.Pair, taskData.Schedule.Amount).Return(&mockOrder, nil)
 
-	result, err := task.Run(&taskData)
+	err := task.Run(&taskData)
 
 	assert.NoError(t, err)
-	assert.Equal(t, mockOrder, result.Order)
+	assert.Equal(t, mockOrder, taskData.Order)
 }

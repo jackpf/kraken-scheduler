@@ -14,17 +14,16 @@ type CreateOrderTask struct {
 	api api.Api
 }
 
-func (t CreateOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) {
+func (t CreateOrderTask) Run(taskData *model.TaskData) error {
 	order, err := t.api.CreateOrder(taskData.Schedule.Pair, taskData.Schedule.Amount)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	taskData.Order = *order
-
-	return taskData, nil
+	return nil
 }
 
-func (t CreateOrderTask) Notifications(taskData *model.TaskData) ([]notifications.Notification, []error) {
+func (t CreateOrderTask) Notifications(taskData model.TaskData) ([]notifications.Notification, []error) {
 	return nil, nil
 }

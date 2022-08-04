@@ -23,10 +23,10 @@ func TestSubmitOrderTask_Run(t *testing.T) {
 	api.On("IsLive").Return(false)
 	api.On("SubmitOrder", taskData.Order).Return(mockTransactionIds, nil)
 
-	result, err := task.Run(&taskData)
+	err := task.Run(&taskData)
 
 	assert.NoError(t, err)
-	assert.Equal(t, result.TransactionIds, mockTransactionIds)
+	assert.Equal(t, mockTransactionIds, taskData.TransactionIds)
 }
 
 func TestSubmitOrderTask_Notifications(t *testing.T) {
@@ -40,7 +40,7 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 
 	api.On("IsLive").Return(false)
 
-	result, errs := task.Notifications(&taskData)
+	result, errs := task.Notifications(taskData)
 
 	for _, err := range errs {
 		assert.NoError(t, err)

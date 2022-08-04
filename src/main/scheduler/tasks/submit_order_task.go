@@ -23,7 +23,7 @@ func (t SubmitOrderTask) liveLogTag() string {
 	return "TEST"
 }
 
-func (t SubmitOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) {
+func (t SubmitOrderTask) Run(taskData *model.TaskData) error {
 	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...",
 		t.liveLogTag(),
 		api.FormatAmount(taskData.Order.Amount()),
@@ -34,7 +34,7 @@ func (t SubmitOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) 
 
 	transactionIds, err := t.api.SubmitOrder(taskData.Order)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	transactionIdsString := strings.Join(transactionIds[:], ", ")
@@ -45,11 +45,10 @@ func (t SubmitOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) 
 	log.Infof("[%s] Order placed: %s", t.liveLogTag(), transactionIdsString)
 
 	taskData.TransactionIds = transactionIds
-
-	return taskData, nil
+	return nil
 }
 
-func (t SubmitOrderTask) Notifications(taskData *model.TaskData) ([]notifications.Notification, []error) {
+func (t SubmitOrderTask) Notifications(taskData model.TaskData) ([]notifications.Notification, []error) {
 	return []notifications.Notification{notifications.NewOrderNotification(
 		t.api.IsLive(),
 		taskData.Order.Pair,
