@@ -11,8 +11,7 @@ import (
 )
 
 type Api interface {
-	FormatAmount(amount float64) string
-	CreateOrder(schedule configmodel.Schedule) (*model.Order, error)
+	CreateOrder(pair string, fiatAmount float64) (*model.Order, error)
 	SubmitOrder(order model.Order) ([]string, error)
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
 	IsLive() bool
@@ -24,6 +23,10 @@ func NewApi(appConfig configmodel.Config, live bool, krakenAPI KrakenApiInterfac
 		live:      live,
 		krakenAPI: krakenAPI,
 	}
+}
+
+func FormatAmount(amount float64) string {
+	return fmt.Sprintf("%.8f", amount)
 }
 
 type ApiImpl struct {
@@ -59,17 +62,13 @@ func (a ApiImpl) getCurrentPrice(pair string) (*float64, error) {
 	return &price32, nil
 }
 
-func (a ApiImpl) FormatAmount(amount float64) string {
-	return fmt.Sprintf("%.8f", amount)
-}
-
-func (a ApiImpl) CreateOrder(schedule configmodel.Schedule) (*model.Order, error) { // TODO Retry
-	currentPrice, err := a.getCurrentPrice(schedule.Pair)
+func (a ApiImpl) CreateOrder(pair string, fiatAmount float64) (*model.Order, error) { // TODO Retry
+	currentPrice, err := a.getCurrentPrice(pair)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch price information: %s", err.Error())
 	}
 
-	order := model.NewOrder(schedule.Pair, *currentPrice, schedule.Amount)
+	order := model.NewOrder(pair, *currentPrice, fiatAmount)
 
 	return &order, nil
 }
@@ -81,7 +80,7 @@ func (a ApiImpl) SubmitOrder(order model.Order) ([]string, error) { // TODO Retr
 		data["validate"] = "true"
 	}
 
-	orderResponse, err := a.krakenAPI.AddOrder(order.Pair, "buy", "market", a.FormatAmount(order.Amount()), data)
+	orderResponse, err := a.krakenAPI.AddOrder(order.Pair, "buy", "market", FormatAmount(order.Amount()), data)
 
 	if err != nil {
 		return nil, err

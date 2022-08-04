@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jackpf/kraken-scheduler/src/main/testutil"
 	"testing"
 
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
@@ -11,44 +12,16 @@ import (
 	krakenapi "github.com/beldur/kraken-go-api-client"
 
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
-	"github.com/stretchr/testify/mock"
 )
 
-type MockKrakenApi struct {
-	mock.Mock
-}
-
-func (k *MockKrakenApi) Ticker(pairs ...string) (*krakenapi.TickerResponse, error) {
-	argsCalled := k.Called(pairs)
-	return argsCalled.Get(0).(*krakenapi.TickerResponse), argsCalled.Error(1)
-}
-
-func (k *MockKrakenApi) AddOrder(pair string, direction string, orderType string, volume string, args map[string]string) (*krakenapi.AddOrderResponse, error) {
-	argsCalled := k.Called(pair, direction, orderType, volume, args)
-	return argsCalled.Get(0).(*krakenapi.AddOrderResponse), argsCalled.Error(1)
-}
-
-func (k *MockKrakenApi) OpenOrders(args map[string]string) (*krakenapi.OpenOrdersResponse, error) {
-	argsCalled := k.Called(args)
-	return argsCalled.Get(0).(*krakenapi.OpenOrdersResponse), argsCalled.Error(1)
-}
-
-func (k *MockKrakenApi) ClosedOrders(args map[string]string) (*krakenapi.ClosedOrdersResponse, error) {
-	argsCalled := k.Called(args)
-	return argsCalled.Get(0).(*krakenapi.ClosedOrdersResponse), argsCalled.Error(1)
-}
-
-func TestApi_FormatAmount(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
-	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, true, krakenAPI)
-
-	result := api.FormatAmount(12.34567891011)
+func TestFormatAmount(t *testing.T) {
+	result := FormatAmount(12.34567891011)
 
 	assert.Equal(t, "12.34567891", result)
 }
 
 func TestApi_CreateOrder(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
+	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, true, krakenAPI)
 
 	price := 246.0
@@ -58,7 +31,7 @@ func TestApi_CreateOrder(t *testing.T) {
 		XXBTZEUR: krakenapi.PairTickerInfo{Close: []string{fmt.Sprintf("%f", price), "0"}},
 	}, nil)
 
-	order, err := api.CreateOrder(configmodel.Schedule{"", pair, 123.0})
+	order, err := api.CreateOrder(pair, 123.0)
 
 	assert.NoError(t, err)
 	assert.Equal(t, pair, order.Pair)
@@ -68,7 +41,7 @@ func TestApi_CreateOrder(t *testing.T) {
 }
 
 func TestApi_SubmitOrder(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
+	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, true, krakenAPI)
 
 	order := model.NewOrder("test-pair", 123.0, 246.0)
@@ -85,7 +58,7 @@ func TestApi_SubmitOrder(t *testing.T) {
 }
 
 func TestApi_SubmitOrder_NotLive(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
+	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, false, krakenAPI)
 
 	order := model.NewOrder("test-pair", 123.0, 246.0)
@@ -102,7 +75,7 @@ func TestApi_SubmitOrder_NotLive(t *testing.T) {
 }
 
 func TestApi_TransactionStatus_Open(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
+	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, false, krakenAPI)
 
 	transactionId := "test-id"
@@ -127,7 +100,7 @@ func TestApi_TransactionStatus_Open(t *testing.T) {
 }
 
 func TestApi_TransactionStatus_Closed(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
+	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, false, krakenAPI)
 
 	transactionId := "test-id"
@@ -152,7 +125,7 @@ func TestApi_TransactionStatus_Closed(t *testing.T) {
 }
 
 func TestApi_TransactionStatus_NotFound(t *testing.T) {
-	krakenAPI := new(MockKrakenApi)
+	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, false, krakenAPI)
 
 	transactionId := "test-id"

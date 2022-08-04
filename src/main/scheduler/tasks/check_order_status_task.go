@@ -20,15 +20,17 @@ func (t CheckOrderStatusTask) Run(taskData *model.TaskData) (*model.TaskData, er
 	return taskData, nil
 }
 
-func (t CheckOrderStatusTask) Notifications(taskData *model.TaskData) ([]notificationtemplates.NotificationTemplate, error) {
+func (t CheckOrderStatusTask) Notifications(taskData *model.TaskData) ([]notificationtemplates.NotificationTemplate, []error) {
 	var notifications []notificationtemplates.NotificationTemplate
+	var errs []error
 
 	for _, transactionId := range taskData.TransactionIds {
 		for { // TODO perform in background & have max attempts
 			completedOrder, err := t.api.TransactionStatus(transactionId)
 
 			if err != nil {
-				return nil, err
+				errs = append(errs, err)
+				break
 			}
 
 			if completedOrder != nil {
@@ -52,5 +54,5 @@ func (t CheckOrderStatusTask) Notifications(taskData *model.TaskData) ([]notific
 		}
 	}
 
-	return notifications, nil
+	return notifications, errs
 }

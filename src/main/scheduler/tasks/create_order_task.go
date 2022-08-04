@@ -15,7 +15,7 @@ type CreateOrderTask struct {
 }
 
 func (t CreateOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) {
-	order, err := t.api.CreateOrder(taskData.Schedule)
+	order, err := t.api.CreateOrder(taskData.Schedule.Pair, taskData.Schedule.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -25,6 +25,6 @@ func (t CreateOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) 
 	return taskData, nil
 }
 
-func (t CreateOrderTask) Notifications(taskData *model.TaskData) ([]notificationtemplates.NotificationTemplate, error) {
+func (t CreateOrderTask) Notifications(taskData *model.TaskData) ([]notificationtemplates.NotificationTemplate, []error) {
 	return nil, nil
 }

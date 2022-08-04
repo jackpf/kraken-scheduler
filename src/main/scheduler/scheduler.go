@@ -103,8 +103,8 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 			s.notifyError(*taskData, err)
 		}
 
-		notifications, err := task.Notifications(taskData)
-		if err != nil {
+		notifications, errs := task.Notifications(taskData)
+		for _, err := range errs {
 			s.logErrors(s.notifyError(*taskData, err))
 		}
 		for _, notification := range notifications {
