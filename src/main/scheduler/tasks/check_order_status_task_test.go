@@ -4,7 +4,7 @@ import (
 	"fmt"
 	krakenapi "github.com/beldur/kraken-go-api-client"
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
-	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	"github.com/jackpf/kraken-scheduler/src/main/testutil"
 	"github.com/stretchr/testify/assert"
@@ -32,15 +32,15 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	for _, err := range errs {
 		assert.NoError(t, err)
 	}
-	assert.Equal(t, []notificationtemplates.NotificationTemplate{
-		notificationtemplates.NewPurchaseNotification(
+	assert.Equal(t, []notifications.Notification{
+		notifications.NewPurchaseNotification(
 			"mock-pair",
 			taskData.Order.Amount(),
 			123.0,
 			"1",
 			mockCompletedOrder1,
 		),
-		notificationtemplates.NewPurchaseNotification(
+		notifications.NewPurchaseNotification(
 			"mock-pair",
 			taskData.Order.Amount(),
 			123.0,
@@ -70,15 +70,15 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 
 	result, errs := task.Notifications(&taskData)
 
-	assert.Equal(t, []notificationtemplates.NotificationTemplate{
-		notificationtemplates.NewPurchaseNotification(
+	assert.Equal(t, []notifications.Notification{
+		notifications.NewPurchaseNotification(
 			"mock-pair",
 			taskData.Order.Amount(),
 			123.0,
 			"1",
 			mockCompletedOrder1,
 		),
-		notificationtemplates.NewPurchaseNotification(
+		notifications.NewPurchaseNotification(
 			"mock-pair",
 			taskData.Order.Amount(),
 			123.0,

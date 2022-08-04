@@ -1,4 +1,4 @@
-package notificationtemplates
+package notifications
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	krakenapi "github.com/beldur/kraken-go-api-client"
 )
 
-func NewPurchaseNotification(pair string, amount float64, orderPrice float64, transactionId string, completedOrder krakenapi.Order) NotificationTemplate {
+func NewPurchaseNotification(pair string, amount float64, orderPrice float64, transactionId string, completedOrder krakenapi.Order) Notification {
 	return PurchaseNotification{pair: pair, amount: amount, orderPrice: orderPrice, transactionId: transactionId, completedOrder: completedOrder}
 }
 

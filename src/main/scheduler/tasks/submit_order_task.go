@@ -2,7 +2,7 @@ package tasks
 
 import (
 	"github.com/jackpf/kraken-scheduler/src/main/api"
-	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	log "github.com/sirupsen/logrus"
 	"strings"
@@ -49,8 +49,8 @@ func (t SubmitOrderTask) Run(taskData *model.TaskData) (*model.TaskData, error) 
 	return taskData, nil
 }
 
-func (t SubmitOrderTask) Notifications(taskData *model.TaskData) ([]notificationtemplates.NotificationTemplate, []error) {
-	return []notificationtemplates.NotificationTemplate{notificationtemplates.NewOrderNotification(
+func (t SubmitOrderTask) Notifications(taskData *model.TaskData) ([]notifications.Notification, []error) {
+	return []notifications.Notification{notifications.NewOrderNotification(
 		t.api.IsLive(),
 		taskData.Order.Pair,
 		taskData.Order.Amount(),

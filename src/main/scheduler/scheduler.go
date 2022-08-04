@@ -10,7 +10,7 @@ import (
 
 	"github.com/jackpf/kraken-scheduler/src/main/util"
 
-	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 
 	"github.com/jackpf/kraken-scheduler/src/main/api"
 
@@ -70,7 +70,7 @@ func (s *Scheduler) notifyError(taskData model.TaskData, err error) []error {
 		return nil
 	}
 
-	notification := notificationtemplates.NewErrorNotification(
+	notification := notifications.NewErrorNotification(
 		taskData.Schedule,
 		err,
 	)
@@ -78,7 +78,7 @@ func (s *Scheduler) notifyError(taskData model.TaskData, err error) []error {
 	return s.notify(notification)
 }
 
-func (s *Scheduler) notify(notification notificationtemplates.NotificationTemplate) []error {
+func (s *Scheduler) notify(notification notifications.Notification) []error {
 	var errors []error
 	for _, notifier := range s.notifiers {
 		var err = (*notifier).Send(notification.Subject(), notification.Body())

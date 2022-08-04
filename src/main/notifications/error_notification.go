@@ -1,4 +1,4 @@
-package notificationtemplates
+package notifications
 
 import (
 	"fmt"

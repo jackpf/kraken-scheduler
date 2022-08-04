@@ -2,7 +2,7 @@ package tasks
 
 import (
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
-	"github.com/jackpf/kraken-scheduler/src/main/notificationtemplates"
+	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	"github.com/jackpf/kraken-scheduler/src/main/testutil"
 	"testing"
@@ -45,7 +45,7 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 	for _, err := range errs {
 		assert.NoError(t, err)
 	}
-	assert.Equal(t, []notificationtemplates.NotificationTemplate{notificationtemplates.NewOrderNotification(
+	assert.Equal(t, []notifications.Notification{notifications.NewOrderNotification(
 		false,
 		"mock-pair",
 		taskData.Order.Amount(),

@@ -1,11 +1,11 @@
-package notificationtemplates
+package notifications
 
 import (
 	"fmt"
 	"strings"
 )
 
-func NewOrderNotification(isLive bool, pair string, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) NotificationTemplate {
+func NewOrderNotification(isLive bool, pair string, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) Notification {
 	return OrderNotification{isLive: isLive, pair: pair, amount: amount, orderPrice: orderPrice, assetPrice: assetPrice, transactionIds: transactionIds}
 }
 
