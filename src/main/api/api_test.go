@@ -165,6 +165,6 @@ func TestApiImpl_CheckBalance(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, response, 2)
-	assert.Equal(t, apimodel.BalanceData{Currency: "ZEUR", NextPurchaseAmount: 300.0, Balance: 100.0}, response[0])
-	assert.Equal(t, apimodel.BalanceData{Currency: "ZUSD", NextPurchaseAmount: 50.0, Balance: 20.0}, response[1])
+	assert.Contains(t, response, apimodel.BalanceData{Currency: "ZEUR", NextPurchaseAmount: 300.0, Balance: 100.0})
+	assert.Contains(t, response, apimodel.BalanceData{Currency: "ZUSD", NextPurchaseAmount: 50.0, Balance: 20.0})
 }
