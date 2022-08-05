@@ -40,10 +40,10 @@ func (t CheckBalanceTask) Notifications(taskData model.TaskData) ([]notification
 
 	for _, balance := range taskData.BalanceData {
 		if balance.Balance/balance.NextPurchaseAmount < alertThreshold {
-			log.Warnf("Low balance on account for %s", balance.Currency)
+			log.Warnf("Low balance on account for %s", balance.Asset.Name)
 
 			balanceNotifications = append(balanceNotifications, notifications.NewLowBalanceNotification(
-				balance.Currency,
+				balance.Asset,
 				balance.NextPurchaseAmount,
 				balance.Balance,
 			))

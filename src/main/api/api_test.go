@@ -15,12 +15,6 @@ import (
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
-func TestFormatAmount(t *testing.T) {
-	result := FormatAmount(12.34567891011)
-
-	assert.Equal(t, "12.34567891", result)
-}
-
 func TestApi_CreateOrder(t *testing.T) {
 	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, true, krakenAPI)
