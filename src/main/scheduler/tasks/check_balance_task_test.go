@@ -15,16 +15,16 @@ import (
 func TestCheckBalanceTask_Run(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewCheckBalanceTask(api)
-	schedule := configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: "XXBTZEUR"}
+	schedule := configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}}
 	jobs := []struct {
 		configmodel.Schedule
 		*gocron.Job
 	}{{schedule, nil}}
 	taskData := model.TaskData{Jobs: jobs, Schedule: schedule}
 
-	balanceInfo := []apimodel.BalanceData{{Currency: "ZEUR", NextPurchaseAmount: 123.0, Balance: 456.0}}
+	balanceInfo := []apimodel.BalanceData{{Asset: configmodel.ZEUR, NextPurchaseAmount: 123.0, Balance: 456.0}}
 
-	api.On("CheckBalance", []apimodel.BalanceRequest{{Pair: "XXBTZEUR", Amount: 123.0}}).Return(balanceInfo, nil)
+	api.On("CheckBalance", []apimodel.BalanceRequest{{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Amount: 123.0}}).Return(balanceInfo, nil)
 
 	err := task.Run(&taskData)
 
@@ -36,8 +36,8 @@ func TestCheckBalanceTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewCheckBalanceTask(api)
 	taskData := model.TaskData{BalanceData: []apimodel.BalanceData{
-		{Currency: "ZUSD", NextPurchaseAmount: 100.0, Balance: 150.0},
-		{Currency: "ZEUR", NextPurchaseAmount: 100.0, Balance: 149.99},
+		{Asset: configmodel.ZUSD, NextPurchaseAmount: 100.0, Balance: 150.0},
+		{Asset: configmodel.ZEUR, NextPurchaseAmount: 100.0, Balance: 149.99},
 	}}
 
 	balanceNotifications, errs := task.Notifications(taskData)
@@ -47,5 +47,5 @@ func TestCheckBalanceTask_Notifications(t *testing.T) {
 	}
 
 	assert.Len(t, balanceNotifications, 1)
-	assert.Equal(t, notifications.NewLowBalanceNotification("ZEUR", 100.0, 149.99), balanceNotifications[0])
+	assert.Equal(t, notifications.NewLowBalanceNotification(configmodel.ZEUR, 100.0, 149.99), balanceNotifications[0])
 }
