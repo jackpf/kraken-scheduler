@@ -3,7 +3,6 @@ package scheduler
 import (
 	"fmt"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/tasks"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -22,7 +21,6 @@ import (
 
 	"github.com/jackpf/kraken-scheduler/src/main/notifier"
 
-	krakenapi "github.com/beldur/kraken-go-api-client"
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
@@ -117,12 +115,6 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 }
 
 func (s *Scheduler) validateSchedule(schedule configmodel.Schedule) error {
-	// Ensure pair is valid
-	if !reflect.ValueOf(krakenapi.AssetPairsResponse{}).
-		FieldByName(schedule.Pair.Name()).IsValid() {
-		return fmt.Errorf("%s is not a valid asset pair", schedule.Pair)
-	}
-
 	// Ensure valid amount
 	if schedule.Amount <= 0.0 {
 		return fmt.Errorf("purchase amount must be >= 0, got %f", schedule.Amount)
