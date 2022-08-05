@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	krakenapi "github.com/beldur/kraken-go-api-client"
+	apimodel "github.com/jackpf/kraken-scheduler/src/main/api/model"
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 )
@@ -14,6 +15,7 @@ type Api interface {
 	CreateOrder(pair string, fiatAmount float64) (*model.Order, error)
 	SubmitOrder(order model.Order) ([]string, error)
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
+	CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error)
 	IsLive() bool
 }
 
@@ -106,6 +108,35 @@ func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, erro
 	} else {
 		return nil, fmt.Errorf("transaction %s could not be found in open or closed order history", transactionId)
 	}
+}
+
+func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error) {
+	balance, err := a.krakenAPI.Balance()
+	if err != nil {
+		return nil, err
+	}
+
+	totalToPurchase := make(map[string]float64)
+
+	for _, balanceRequest := range balanceRequests {
+		totalToPurchase[balanceRequest.Currency()] += balanceRequest.Amount
+	}
+
+	var balanceData []apimodel.BalanceData
+
+	for currency, amount := range totalToPurchase {
+		balanceInCurrency := reflect.ValueOf(*balance).
+			FieldByName(currency).
+			Interface().(float64)
+
+		balanceData = append(balanceData, apimodel.BalanceData{
+			Currency:           currency,
+			NextPurchaseAmount: amount,
+			Balance:            balanceInCurrency,
+		})
+	}
+
+	return balanceData, nil
 }
 
 func (a ApiImpl) IsLive() bool {

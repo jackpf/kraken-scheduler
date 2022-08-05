@@ -35,6 +35,8 @@ func NewScheduler(appConfig configmodel.Config, api api.Api, notifiers []*notifi
 			tasks.NewCreateOrderTask(api),
 			tasks.NewSubmitOrderTask(api),
 			tasks.NewCheckOrderStatusTask(api),
+			tasks.NewCheckBalanceTask(api),
+			tasks.NewLogNextPurchaseTask(),
 		},
 		notifiers: notifiers,
 	}
@@ -95,7 +97,7 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	defer s.mutex.Unlock()
 	atomic.AddUint64(&s.jobRuns, 1)
 
-	taskData := model.TaskData{Schedule: schedule}
+	taskData := model.TaskData{Jobs: s.jobs, Schedule: schedule}
 
 	for _, task := range s.tasks {
 		err := task.Run(&taskData)
@@ -112,10 +114,6 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 		}
 	}
 
-	job := s.findJob(schedule)
-	if job != nil {
-		log.Infof("Next purchase for %s will occur at %+v", job.Pair, job.NextRun())
-	}
 }
 
 func (s *Scheduler) validateSchedule(schedule configmodel.Schedule) error {
@@ -128,19 +126,6 @@ func (s *Scheduler) validateSchedule(schedule configmodel.Schedule) error {
 	// Ensure valid amount
 	if schedule.Amount <= 0.0 {
 		return fmt.Errorf("purchase amount must be >= 0, got %f", schedule.Amount)
-	}
-
-	return nil
-}
-
-func (s *Scheduler) findJob(schedule configmodel.Schedule) *struct {
-	configmodel.Schedule
-	*gocron.Job
-} {
-	for _, job := range s.jobs {
-		if job.Schedule == schedule {
-			return &job
-		}
 	}
 
 	return nil

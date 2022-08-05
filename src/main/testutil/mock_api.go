@@ -2,6 +2,7 @@ package testutil
 
 import (
 	krakenapi "github.com/beldur/kraken-go-api-client"
+	apimodel "github.com/jackpf/kraken-scheduler/src/main/api/model"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,6 +29,11 @@ func (m *MockApi) SubmitOrder(order model.Order) ([]string, error) {
 func (m *MockApi) TransactionStatus(transactionId string) (*krakenapi.Order, error) {
 	argsCalled := m.Called(transactionId)
 	return argsCalled.Get(0).(*krakenapi.Order), argsCalled.Error(1)
+}
+
+func (m *MockApi) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error) {
+	argsCalled := m.Called(balanceRequests)
+	return argsCalled.Get(0).([]apimodel.BalanceData), argsCalled.Error(1)
 }
 
 func (m *MockApi) IsLive() bool {

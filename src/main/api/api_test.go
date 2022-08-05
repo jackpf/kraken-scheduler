@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	apimodel "github.com/jackpf/kraken-scheduler/src/main/api/model"
 	"github.com/jackpf/kraken-scheduler/src/main/testutil"
 	"testing"
 
@@ -146,4 +147,24 @@ func TestApi_TransactionStatus_NotFound(t *testing.T) {
 
 	assert.EqualError(t, err, "transaction test-id could not be found in open or closed order history")
 	assert.Nil(t, result)
+}
+
+func TestApiImpl_CheckBalance(t *testing.T) {
+	krakenAPI := new(testutil.MockKrakenApi)
+	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, false, krakenAPI)
+
+	krakenAPI.On("Balance").Return(&krakenapi.BalanceResponse{
+		ZEUR: 100.0,
+		ZUSD: 20.0,
+	},
+		nil)
+
+	request := []apimodel.BalanceRequest{{Pair: "XXBTZEUR", Amount: 100.0}, {Pair: "XXBTZEUR", Amount: 200.0}, {Pair: "XTZUSD", Amount: 50.0}}
+
+	response, err := api.CheckBalance(request)
+
+	assert.NoError(t, err)
+	assert.Len(t, response, 2)
+	assert.Contains(t, response, apimodel.BalanceData{Currency: "ZEUR", NextPurchaseAmount: 300.0, Balance: 100.0})
+	assert.Contains(t, response, apimodel.BalanceData{Currency: "ZUSD", NextPurchaseAmount: 50.0, Balance: 20.0})
 }

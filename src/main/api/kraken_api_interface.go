@@ -7,4 +7,5 @@ type KrakenApiInterface interface {
 	AddOrder(pair string, direction string, orderType string, volume string, args map[string]string) (*krakenapi.AddOrderResponse, error)
 	OpenOrders(args map[string]string) (*krakenapi.OpenOrdersResponse, error)
 	ClosedOrders(args map[string]string) (*krakenapi.ClosedOrdersResponse, error)
+	Balance() (*krakenapi.BalanceResponse, error)
 }
