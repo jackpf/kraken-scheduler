@@ -28,3 +28,8 @@ func (m *MockKrakenApi) ClosedOrders(args map[string]string) (*krakenapi.ClosedO
 	argsCalled := m.Called(args)
 	return argsCalled.Get(0).(*krakenapi.ClosedOrdersResponse), argsCalled.Error(1)
 }
+
+func (m *MockKrakenApi) Balance() (*krakenapi.BalanceResponse, error) {
+	argsCalled := m.Called()
+	return argsCalled.Get(0).(*krakenapi.BalanceResponse), argsCalled.Error(1)
+}
