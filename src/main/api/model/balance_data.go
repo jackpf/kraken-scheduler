@@ -8,7 +8,7 @@ type BalanceRequest struct {
 }
 
 func (r BalanceRequest) Currency() string {
-	return fmt.Sprintf("Z%s", r.Pair[len(r.Pair)-3:])
+	return fmt.Sprintf("%s", r.Pair[len(r.Pair)-4:])
 }
 
 type BalanceData struct {
