@@ -3,6 +3,7 @@ package notifications
 import (
 	"fmt"
 	"github.com/jackpf/kraken-scheduler/src/main/config/model"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 	"strings"
 )
 
@@ -30,17 +31,14 @@ func (n OrderNotification) Subject() string {
 func (n OrderNotification) Body() string {
 	return fmt.Sprintf(`Transaction ID: %s.
 
-Placed an order for %f%s, at a cost of %s%f.
-Current asset price: %s = %s%f.
+Placed an order for %s, at a cost of %s.
+Current asset price: %s = %s.
 
 Purchase confirmation should arrive shortly, if not - check the application logs!`,
 		strings.Join(n.transactionIds[:], ", "),
-		n.amount,
-		n.pair.First.Symbol,
-		n.pair.Second.Symbol,
-		n.orderPrice,
+		util.FormatAsset(n.pair.First, n.amount),
+		util.FormatAsset(n.pair.Second, n.orderPrice),
 		n.pair.First.Name,
-		n.pair.Second.Symbol,
-		n.assetPrice)
+		util.FormatAsset(n.pair.Second, n.assetPrice))
 
 }

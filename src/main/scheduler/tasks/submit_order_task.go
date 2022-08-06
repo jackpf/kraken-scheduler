@@ -25,15 +25,12 @@ func (t SubmitOrderTask) liveLogTag() string {
 }
 
 func (t SubmitOrderTask) Run(taskData *model.TaskData) error {
-	log.Infof("[%s] Ordering %s%s for %s%+v (1%s = %s%f)...",
+	log.Infof("[%s] Ordering %s for %s (1%s = %s)...",
 		t.liveLogTag(),
-		util.FormatFloat(taskData.Order.Amount(), 8),
+		util.FormatAsset(taskData.Order.Pair.First, taskData.Order.Amount()),
+		util.FormatAsset(taskData.Order.Pair.Second, taskData.Order.FiatAmount),
 		taskData.Order.Pair.First.Symbol,
-		taskData.Order.Pair.Second.Symbol,
-		taskData.Order.FiatAmount,
-		taskData.Order.Pair.First.Symbol,
-		taskData.Order.Pair.Second.Symbol,
-		taskData.Order.Price)
+		util.FormatAsset(taskData.Order.Pair.Second, taskData.Order.Price))
 
 	transactionIds, err := t.api.SubmitOrder(taskData.Order)
 	if err != nil {

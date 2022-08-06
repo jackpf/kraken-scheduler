@@ -3,6 +3,7 @@ package notifications
 import (
 	"fmt"
 	"github.com/jackpf/kraken-scheduler/src/main/config/model"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 
 	krakenapi "github.com/beldur/kraken-go-api-client"
 )
@@ -26,13 +27,11 @@ func (n PurchaseNotification) Subject() string {
 func (n PurchaseNotification) Body() string {
 	return fmt.Sprintf(`Transaction ID: %s.
 
-Purchase of %f%s, at a cost of %s%f was successful.
+Purchase of %s, at a cost of %s was successful.
 
 Transaction summary: %+v`,
 		n.transactionId,
-		n.amount,
-		n.pair.First.Symbol,
-		n.pair.Second.Symbol,
-		n.orderPrice,
+		util.FormatAsset(n.pair.First, n.amount),
+		util.FormatAsset(n.pair.Second, n.orderPrice),
 		n.completedOrder)
 }
