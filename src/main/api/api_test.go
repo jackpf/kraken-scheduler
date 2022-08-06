@@ -41,7 +41,7 @@ func TestApi_SubmitOrder(t *testing.T) {
 
 	order := model.NewOrder(configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, 123.0, 246.0)
 	transactionIds := []string{"1", "2"}
-	krakenAPI.On("AddOrder", order.Pair.Name(), "buy", "market", "2.00000000", map[string]string{}).Return(
+	krakenAPI.On("AddOrder", order.Pair.Name(), "buy", "market", "2", map[string]string{}).Return(
 		&krakenapi.AddOrderResponse{TransactionIds: transactionIds},
 		nil,
 	)
@@ -58,7 +58,7 @@ func TestApi_SubmitOrder_NotLive(t *testing.T) {
 
 	order := model.NewOrder(configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, 123.0, 246.0)
 	transactionIds := []string{"1", "2"}
-	krakenAPI.On("AddOrder", order.Pair.Name(), "buy", "market", "2.00000000", map[string]string{"validate": "true"}).Return(
+	krakenAPI.On("AddOrder", order.Pair.Name(), "buy", "market", "2", map[string]string{"validate": "true"}).Return(
 		&krakenapi.AddOrderResponse{TransactionIds: transactionIds},
 		nil,
 	)
