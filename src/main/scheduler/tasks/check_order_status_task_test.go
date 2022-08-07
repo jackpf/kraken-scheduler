@@ -15,8 +15,8 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewCheckOrderStatusTask(api)
 	taskData := model.TaskData{
-		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: "mock-pair"},
-		Order:          model.Order{Pair: "mock-pair", Price: 500.0, FiatAmount: 123.0},
+		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
+		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
 		TransactionIds: []string{"1", "2"},
 	}
 
@@ -34,14 +34,14 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	}
 	assert.Equal(t, []notifications.Notification{
 		notifications.NewPurchaseNotification(
-			"mock-pair",
+			configmodel.Pair{configmodel.XXBT, configmodel.ZEUR},
 			taskData.Order.Amount(),
 			123.0,
 			"1",
 			mockCompletedOrder1,
 		),
 		notifications.NewPurchaseNotification(
-			"mock-pair",
+			configmodel.Pair{configmodel.XXBT, configmodel.ZEUR},
 			taskData.Order.Amount(),
 			123.0,
 			"2",
@@ -54,8 +54,8 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewCheckOrderStatusTask(api)
 	taskData := model.TaskData{
-		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: "mock-pair"},
-		Order:          model.Order{Pair: "mock-pair", Price: 500.0, FiatAmount: 123.0},
+		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
+		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
 		TransactionIds: []string{"1", "2", "3"},
 	}
 
@@ -72,14 +72,14 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 
 	assert.Equal(t, []notifications.Notification{
 		notifications.NewPurchaseNotification(
-			"mock-pair",
+			configmodel.Pair{configmodel.XXBT, configmodel.ZEUR},
 			taskData.Order.Amount(),
 			123.0,
 			"1",
 			mockCompletedOrder1,
 		),
 		notifications.NewPurchaseNotification(
-			"mock-pair",
+			configmodel.Pair{configmodel.XXBT, configmodel.ZEUR},
 			taskData.Order.Amount(),
 			123.0,
 			"3",

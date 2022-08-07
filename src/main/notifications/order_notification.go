@@ -2,16 +2,18 @@ package notifications
 
 import (
 	"fmt"
+	"github.com/jackpf/kraken-scheduler/src/main/config/model"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 	"strings"
 )
 
-func NewOrderNotification(isLive bool, pair string, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) Notification {
+func NewOrderNotification(isLive bool, pair model.Pair, amount float64, orderPrice float64, assetPrice float64, transactionIds []string) Notification {
 	return OrderNotification{isLive: isLive, pair: pair, amount: amount, orderPrice: orderPrice, assetPrice: assetPrice, transactionIds: transactionIds}
 }
 
 type OrderNotification struct {
 	isLive         bool
-	pair           string
+	pair           model.Pair
 	amount         float64
 	orderPrice     float64
 	assetPrice     float64
@@ -23,21 +25,20 @@ func (n OrderNotification) Subject() string {
 	if !n.isLive {
 		testTag = " [TEST]"
 	}
-	return fmt.Sprintf("kraken-scheduler%s: %s order submitted (%s)", testTag, n.pair, strings.Join(n.transactionIds[:], ", "))
+	return fmt.Sprintf("kraken-scheduler%s: %s order submitted (%s)", testTag, n.pair.Name(), strings.Join(n.transactionIds[:], ", "))
 }
 
 func (n OrderNotification) Body() string {
 	return fmt.Sprintf(`Transaction ID: %s.
 
-Placed an order for %f %s, at a cost of %f.
-Current asset price: 1 * %s = %f.
+Placed an order for %s, at a cost of %s.
+Current asset price: %s = %s.
 
 Purchase confirmation should arrive shortly, if not - check the application logs!`,
 		strings.Join(n.transactionIds[:], ", "),
-		n.amount,
-		n.pair,
-		n.orderPrice,
-		n.pair,
-		n.assetPrice)
+		util.FormatAsset(n.pair.First, n.amount),
+		util.FormatAsset(n.pair.Second, n.orderPrice),
+		n.pair.First.Name,
+		util.FormatAsset(n.pair.Second, n.assetPrice))
 
 }

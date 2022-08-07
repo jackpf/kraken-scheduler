@@ -15,20 +15,14 @@ import (
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
-func TestFormatAmount(t *testing.T) {
-	result := FormatAmount(12.34567891011)
-
-	assert.Equal(t, "12.34567891", result)
-}
-
 func TestApi_CreateOrder(t *testing.T) {
 	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, true, krakenAPI)
 
 	price := 246.0
-	pair := "XXBTZEUR" // Must be a real pair due to reflection use
+	pair := configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}
 
-	krakenAPI.On("Ticker", []string{pair}).Return(&krakenapi.TickerResponse{
+	krakenAPI.On("Ticker", []string{pair.Name()}).Return(&krakenapi.TickerResponse{
 		XXBTZEUR: krakenapi.PairTickerInfo{Close: []string{fmt.Sprintf("%f", price), "0"}},
 	}, nil)
 
@@ -45,9 +39,9 @@ func TestApi_SubmitOrder(t *testing.T) {
 	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, true, krakenAPI)
 
-	order := model.NewOrder("test-pair", 123.0, 246.0)
+	order := model.NewOrder(configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, 123.0, 246.0)
 	transactionIds := []string{"1", "2"}
-	krakenAPI.On("AddOrder", order.Pair, "buy", "market", "2.00000000", map[string]string{}).Return(
+	krakenAPI.On("AddOrder", order.Pair.Name(), "buy", "market", "2", map[string]string{}).Return(
 		&krakenapi.AddOrderResponse{TransactionIds: transactionIds},
 		nil,
 	)
@@ -62,9 +56,9 @@ func TestApi_SubmitOrder_NotLive(t *testing.T) {
 	krakenAPI := new(testutil.MockKrakenApi)
 	api := NewApi(configmodel.Config{[]configmodel.Schedule{}}, false, krakenAPI)
 
-	order := model.NewOrder("test-pair", 123.0, 246.0)
+	order := model.NewOrder(configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, 123.0, 246.0)
 	transactionIds := []string{"1", "2"}
-	krakenAPI.On("AddOrder", order.Pair, "buy", "market", "2.00000000", map[string]string{"validate": "true"}).Return(
+	krakenAPI.On("AddOrder", order.Pair.Name(), "buy", "market", "2", map[string]string{"validate": "true"}).Return(
 		&krakenapi.AddOrderResponse{TransactionIds: transactionIds},
 		nil,
 	)
@@ -159,12 +153,15 @@ func TestApiImpl_CheckBalance(t *testing.T) {
 	},
 		nil)
 
-	request := []apimodel.BalanceRequest{{Pair: "XXBTZEUR", Amount: 100.0}, {Pair: "XXBTZEUR", Amount: 200.0}, {Pair: "XTZUSD", Amount: 50.0}}
+	request := []apimodel.BalanceRequest{
+		{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Amount: 100.0},
+		{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Amount: 200.0},
+		{Pair: configmodel.Pair{configmodel.XTZ, configmodel.ZUSD}, Amount: 50.0}}
 
 	response, err := api.CheckBalance(request)
 
 	assert.NoError(t, err)
 	assert.Len(t, response, 2)
-	assert.Contains(t, response, apimodel.BalanceData{Currency: "ZEUR", NextPurchaseAmount: 300.0, Balance: 100.0})
-	assert.Contains(t, response, apimodel.BalanceData{Currency: "ZUSD", NextPurchaseAmount: 50.0, Balance: 20.0})
+	assert.Contains(t, response, apimodel.BalanceData{Asset: configmodel.ZEUR, NextPurchaseAmount: 300.0, Balance: 100.0})
+	assert.Contains(t, response, apimodel.BalanceData{Asset: configmodel.ZUSD, NextPurchaseAmount: 50.0, Balance: 20.0})
 }

@@ -14,8 +14,8 @@ func TestSubmitOrderTask_Run(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewSubmitOrderTask(api)
 	taskData := model.TaskData{
-		Schedule: configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: "mock-pair"},
-		Order:    model.Order{Pair: "mock-pair", Price: 500.0, FiatAmount: 123.0},
+		Schedule: configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
+		Order:    model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
 	}
 
 	mockTransactionIds := []string{"1", "2"}
@@ -33,8 +33,8 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewSubmitOrderTask(api)
 	taskData := model.TaskData{
-		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: "mock-pair"},
-		Order:          model.Order{Pair: "mock-pair", Price: 500.0, FiatAmount: 123.0},
+		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
+		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
 		TransactionIds: []string{"1", "2"},
 	}
 
@@ -47,7 +47,7 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 	}
 	assert.Equal(t, []notifications.Notification{notifications.NewOrderNotification(
 		false,
-		"mock-pair",
+		configmodel.Pair{configmodel.XXBT, configmodel.ZEUR},
 		taskData.Order.Amount(),
 		123.0,
 		500.0,

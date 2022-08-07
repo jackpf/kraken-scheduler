@@ -2,6 +2,6 @@ package model
 
 type Schedule struct {
 	Cron   string  `json:"cron"`
-	Pair   string  `json:"pair"`
+	Pair   Pair    `json:"pair"`
 	Amount float64 `json:"amount"`
 }

@@ -12,9 +12,9 @@ import (
 func TestCreateOrderTask_Run(t *testing.T) {
 	api := new(testutil.MockApi)
 	task := NewCreateOrderTask(api)
-	taskData := model.TaskData{Schedule: configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: "mock-pair"}}
+	taskData := model.TaskData{Schedule: configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}}}
 
-	mockOrder := model.NewOrder("mock-pair", 500.0, 123.0)
+	mockOrder := model.NewOrder(configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, 500.0, 123.0)
 
 	api.On("CreateOrder", taskData.Schedule.Pair, taskData.Schedule.Amount).Return(&mockOrder, nil)
 

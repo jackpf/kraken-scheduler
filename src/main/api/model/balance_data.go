@@ -1,18 +1,16 @@
 package model
 
-import "fmt"
+import (
+	"github.com/jackpf/kraken-scheduler/src/main/config/model"
+)
 
 type BalanceRequest struct {
-	Pair   string
+	Pair   model.Pair
 	Amount float64
 }
 
-func (r BalanceRequest) Currency() string {
-	return fmt.Sprintf("%s", r.Pair[len(r.Pair)-4:])
-}
-
 type BalanceData struct {
-	Currency           string
+	Asset              model.Asset
 	NextPurchaseAmount float64
 	Balance            float64
 }
