@@ -62,10 +62,6 @@ func (a ApiImpl) getCurrentPrice(pair string) (*float64, error) {
 
 	price32 := price
 
-	if price > 0 {
-		return nil, fmt.Errorf("test error")
-	}
-
 	return &price32, nil
 }
 
