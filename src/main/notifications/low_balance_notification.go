@@ -26,7 +26,5 @@ You have %f %s in your account, and the next order amount is %f.
 Top up your account balance ASAP.`,
 		n.balanceAmount,
 		n.currency,
-		n.fiatAmount,
-	)
-
+		n.fiatAmount)
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/avast/retry-go"
 	"reflect"
 	"strconv"
 
@@ -61,44 +62,67 @@ func (a ApiImpl) getCurrentPrice(pair string) (*float64, error) {
 
 	price32 := price
 
+	if price > 0 {
+		return nil, fmt.Errorf("test error")
+	}
+
 	return &price32, nil
 }
 
-func (a ApiImpl) CreateOrder(pair string, fiatAmount float64) (*model.Order, error) { // TODO Retry
-	currentPrice, err := a.getCurrentPrice(pair)
-	if err != nil {
-		return nil, fmt.Errorf("unable to fetch price information: %s", err.Error())
-	}
+func (a ApiImpl) CreateOrder(pair string, fiatAmount float64) (*model.Order, error) {
+	var order model.Order
 
-	order := model.NewOrder(pair, *currentPrice, fiatAmount)
+	if err := retry.Do(func() error {
+		currentPrice, err := a.getCurrentPrice(pair)
+		if err != nil {
+			return err
+		}
+
+		order = model.NewOrder(pair, *currentPrice, fiatAmount)
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("unable to create order: %s", err.Error())
+	}
 
 	return &order, nil
 }
 
-// TODO Check order status & send confirmation
-func (a ApiImpl) SubmitOrder(order model.Order) ([]string, error) { // TODO Retry
-	data := map[string]string{}
-	if !a.live {
-		data["validate"] = "true"
-	}
+func (a ApiImpl) SubmitOrder(order model.Order) ([]string, error) {
+	var orderResponse *krakenapi.AddOrderResponse
 
-	orderResponse, err := a.krakenAPI.AddOrder(order.Pair, "buy", "market", FormatAmount(order.Amount()), data)
+	if err := retry.Do(func() error {
+		data := map[string]string{}
+		if !a.live {
+			data["validate"] = "true"
+		}
 
-	if err != nil {
-		return nil, err
+		var err error
+		if orderResponse, err = a.krakenAPI.AddOrder(order.Pair, "buy", "market", FormatAmount(order.Amount()), data); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("unable to submit order: %s", err.Error())
 	}
 
 	return orderResponse.TransactionIds, nil
 }
 
 func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, error) {
-	openOrders, err := a.krakenAPI.OpenOrders(map[string]string{})
-	if err != nil {
-		return nil, err
-	}
-	closedOrders, err := a.krakenAPI.ClosedOrders(map[string]string{})
-	if err != nil {
-		return nil, err
+	var openOrders *krakenapi.OpenOrdersResponse
+	var closedOrders *krakenapi.ClosedOrdersResponse
+
+	if err := retry.Do(func() error {
+		var err error
+		if openOrders, err = a.krakenAPI.OpenOrders(map[string]string{}); err != nil {
+			return err
+		}
+		if closedOrders, err = a.krakenAPI.ClosedOrders(map[string]string{}); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("unable to check transaction status: %s", err.Error())
 	}
 
 	if _, isOpen := openOrders.Open[transactionId]; isOpen {
@@ -111,9 +135,16 @@ func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, erro
 }
 
 func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error) {
-	balance, err := a.krakenAPI.Balance()
-	if err != nil {
-		return nil, err
+	var balance *krakenapi.BalanceResponse
+
+	if err := retry.Do(func() error {
+		var err error
+		if balance, err = a.krakenAPI.Balance(); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("unable to check balance: %s", err.Error())
 	}
 
 	totalToPurchase := make(map[string]float64)

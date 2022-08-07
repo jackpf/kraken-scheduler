@@ -39,5 +39,4 @@ Purchase confirmation should arrive shortly, if not - check the application logs
 		n.orderPrice,
 		n.pair,
 		n.assetPrice)
-
 }

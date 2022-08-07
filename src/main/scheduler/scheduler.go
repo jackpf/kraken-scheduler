@@ -102,7 +102,9 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 	for _, task := range s.tasks {
 		err := task.Run(&taskData)
 		if err != nil {
+			log.Errorf("Purchase failed: %s", err.Error())
 			s.notifyError(taskData, err)
+			break
 		}
 
 		notifications, errs := task.Notifications(taskData)
