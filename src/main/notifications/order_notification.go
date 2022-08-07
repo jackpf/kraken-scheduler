@@ -40,5 +40,4 @@ Purchase confirmation should arrive shortly, if not - check the application logs
 		util.FormatAsset(n.pair.Second, n.orderPrice),
 		n.pair.First.Name,
 		util.FormatAsset(n.pair.Second, n.assetPrice))
-
 }

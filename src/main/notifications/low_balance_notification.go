@@ -27,6 +27,5 @@ You have %s in your account, and the next order amount is %s.
 
 Top up your account balance ASAP.`,
 		util.FormatAsset(n.asset, n.balanceAmount),
-		util.FormatAsset(n.asset, n.fiatAmount),
-	)
+		util.FormatAsset(n.asset, n.fiatAmount))
 }
