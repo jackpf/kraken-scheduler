@@ -8,6 +8,7 @@ clean:
 	rm -rf target
 
 test:
+	gofmt -l $(SRC_DIR)
 	go test -v $(SRC_DIR)/...
 
 build:
