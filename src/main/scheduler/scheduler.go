@@ -3,7 +3,6 @@ package scheduler
 import (
 	"fmt"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/tasks"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -22,7 +21,6 @@ import (
 
 	"github.com/jackpf/kraken-scheduler/src/main/notifier"
 
-	krakenapi "github.com/beldur/kraken-go-api-client"
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
@@ -119,12 +117,6 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 }
 
 func (s *Scheduler) validateSchedule(schedule configmodel.Schedule) error {
-	// Ensure pair is valid
-	if !reflect.ValueOf(krakenapi.AssetPairsResponse{}).
-		FieldByName(schedule.Pair).IsValid() {
-		return fmt.Errorf("%s is not a valid asset pair", schedule.Pair)
-	}
-
 	// Ensure valid amount
 	if schedule.Amount <= 0.0 {
 		return fmt.Errorf("purchase amount must be >= 0, got %f", schedule.Amount)
@@ -153,7 +145,7 @@ func (s *Scheduler) runUi() {
 
 			completedRatio := float64(time.Now().Unix()-lastRunTime) / float64(job.NextRun().Unix()-lastRunTime)
 
-			logOutput := util.PadLine(fmt.Sprintf("Purchasing %s in %s", job.Pair, util.PrettyDuration(time.Until(job.NextRun()))), 80)
+			logOutput := util.PadLine(fmt.Sprintf("Purchasing %s in %s", job.Pair.Name(), util.PrettyDuration(time.Until(job.NextRun()))), 80)
 			fmt.Printf("%s%s\n", logOutput, util.ProgressBar(completedRatio, 30))
 		}
 		lastJobRuns = s.jobRuns
@@ -188,7 +180,7 @@ func (s *Scheduler) Run() {
 	s.cron.StartAsync()
 
 	for _, job := range s.jobs {
-		log.Infof("Created schedule for %s, purchase will occur at %+v", job.Pair, job.NextRun())
+		log.Infof("Created schedule for %s, purchase will occur at %+v", job.Pair.Name(), job.NextRun())
 	}
 
 	go s.runUi()

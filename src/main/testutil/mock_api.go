@@ -3,6 +3,7 @@ package testutil
 import (
 	krakenapi "github.com/beldur/kraken-go-api-client"
 	apimodel "github.com/jackpf/kraken-scheduler/src/main/api/model"
+	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	"github.com/stretchr/testify/mock"
 )
@@ -16,7 +17,7 @@ func (m *MockApi) FormatAmount(amount float64) string {
 	return argsCalled.String(0)
 }
 
-func (m *MockApi) CreateOrder(pair string, fiatAmount float64) (*model.Order, error) {
+func (m *MockApi) CreateOrder(pair configmodel.Pair, fiatAmount float64) (*model.Order, error) {
 	argsCalled := m.Called(pair, fiatAmount)
 	return argsCalled.Get(0).(*model.Order), argsCalled.Error(1)
 }

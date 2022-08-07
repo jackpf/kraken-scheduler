@@ -1,6 +1,7 @@
 package config
 
 import (
+	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,6 @@ func TestParseConfigValid(t *testing.T) {
 
 	assert.Len(t, config.Schedules, 1)
 	assert.Equal(t, "* * * * *", config.Schedules[0].Cron)
-	assert.Equal(t, "XXBTZEUR", config.Schedules[0].Pair)
+	assert.Equal(t, configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, config.Schedules[0].Pair)
 	assert.Equal(t, 40.00, config.Schedules[0].Amount)
 }

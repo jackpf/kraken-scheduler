@@ -4,6 +4,7 @@ import (
 	"github.com/jackpf/kraken-scheduler/src/main/api"
 	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -24,13 +25,12 @@ func (t SubmitOrderTask) liveLogTag() string {
 }
 
 func (t SubmitOrderTask) Run(taskData *model.TaskData) error {
-	log.Infof("[%s] Ordering %s %s for %+v (%s = %f)...",
+	log.Infof("[%s] Ordering %s for %s (1%s = %s)...",
 		t.liveLogTag(),
-		api.FormatAmount(taskData.Order.Amount()),
-		taskData.Order.Pair,
-		taskData.Order.FiatAmount,
-		taskData.Order.Pair,
-		taskData.Order.Price)
+		util.FormatAsset(taskData.Order.Pair.First, taskData.Order.Amount()),
+		util.FormatAsset(taskData.Order.Pair.Second, taskData.Order.FiatAmount),
+		taskData.Order.Pair.First.Symbol,
+		util.FormatAsset(taskData.Order.Pair.Second, taskData.Order.Price))
 
 	transactionIds, err := t.api.SubmitOrder(taskData.Order)
 	if err != nil {

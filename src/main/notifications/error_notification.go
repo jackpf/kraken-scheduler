@@ -23,7 +23,7 @@ func (n ErrorNotification) Body() string {
 
 Error: %s`,
 		n.schedule.Amount,
-		n.schedule.Pair,
+		n.schedule.Pair.Name(),
 		n.err.Error())
 
 }

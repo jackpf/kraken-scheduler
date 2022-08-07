@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/jackpf/kraken-scheduler/src/main/util"
 	"reflect"
 	"strconv"
 
@@ -13,7 +14,7 @@ import (
 )
 
 type Api interface {
-	CreateOrder(pair string, fiatAmount float64) (*model.Order, error)
+	CreateOrder(pair configmodel.Pair, fiatAmount float64) (*model.Order, error)
 	SubmitOrder(order model.Order) ([]string, error)
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
 	CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error)
@@ -28,25 +29,21 @@ func NewApi(appConfig configmodel.Config, live bool, krakenAPI KrakenApiInterfac
 	}
 }
 
-func FormatAmount(amount float64) string {
-	return fmt.Sprintf("%.8f", amount)
-}
-
 type ApiImpl struct {
 	config    configmodel.Config
 	live      bool
 	krakenAPI KrakenApiInterface
 }
 
-func (a ApiImpl) getCurrentPrice(pair string) (*float64, error) {
-	tickerResult, err := a.krakenAPI.Ticker(pair)
+func (a ApiImpl) getCurrentPrice(pair configmodel.Pair) (*float64, error) {
+	tickerResult, err := a.krakenAPI.Ticker(pair.Name())
 
 	if err != nil {
 		return nil, err
 	}
 
 	tickerInfo := reflect.ValueOf(*tickerResult).
-		FieldByName(pair).
+		FieldByName(pair.Name()).
 		Interface().(krakenapi.PairTickerInfo)
 
 	pricePair := tickerInfo.Close
@@ -65,7 +62,7 @@ func (a ApiImpl) getCurrentPrice(pair string) (*float64, error) {
 	return &price32, nil
 }
 
-func (a ApiImpl) CreateOrder(pair string, fiatAmount float64) (*model.Order, error) {
+func (a ApiImpl) CreateOrder(pair configmodel.Pair, fiatAmount float64) (*model.Order, error) {
 	var order model.Order
 
 	if err := retry.Do(func() error {
@@ -93,7 +90,7 @@ func (a ApiImpl) SubmitOrder(order model.Order) ([]string, error) {
 		}
 
 		var err error
-		if orderResponse, err = a.krakenAPI.AddOrder(order.Pair, "buy", "market", FormatAmount(order.Amount()), data); err != nil {
+		if orderResponse, err = a.krakenAPI.AddOrder(order.Pair.Name(), "buy", "market", util.FormatFloat(order.Amount(), 8), data); err != nil {
 			return err
 		}
 		return nil
@@ -143,21 +140,21 @@ func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apim
 		return nil, fmt.Errorf("unable to check balance: %s", err.Error())
 	}
 
-	totalToPurchase := make(map[string]float64)
+	totalToPurchase := make(map[configmodel.Asset]float64)
 
 	for _, balanceRequest := range balanceRequests {
-		totalToPurchase[balanceRequest.Currency()] += balanceRequest.Amount
+		totalToPurchase[balanceRequest.Pair.Second] += balanceRequest.Amount
 	}
 
 	var balanceData []apimodel.BalanceData
 
-	for currency, amount := range totalToPurchase {
+	for asset, amount := range totalToPurchase {
 		balanceInCurrency := reflect.ValueOf(*balance).
-			FieldByName(currency).
+			FieldByName(asset.Name).
 			Interface().(float64)
 
 		balanceData = append(balanceData, apimodel.BalanceData{
-			Currency:           currency,
+			Asset:              asset,
 			NextPurchaseAmount: amount,
 			Balance:            balanceInCurrency,
 		})

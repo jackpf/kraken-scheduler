@@ -15,7 +15,7 @@ type LogNextPurchaseTask struct {
 
 func (t LogNextPurchaseTask) Run(taskData *model.TaskData) error {
 	if taskData.Job() != nil {
-		log.Infof("Next purchase for %s will occur at %+v", taskData.Job().Pair, taskData.Job().NextRun())
+		log.Infof("Next purchase for %s will occur at %+v", taskData.Job().Pair.Name(), taskData.Job().NextRun())
 	}
 
 	return nil
