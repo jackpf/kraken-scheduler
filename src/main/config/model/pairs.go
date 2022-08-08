@@ -6,9 +6,10 @@ import (
 )
 
 type Asset struct {
-	Name   string
-	Symbol string
-	IsFiat bool
+	Name           string
+	NormalisedName string
+	Symbol         string
+	IsFiat         bool
 }
 
 type Pair struct {
@@ -36,40 +37,40 @@ func (p *Pair) UnmarshalJSON(data []byte) error {
 }
 
 var (
-	ADA  = Asset{"ADA", "₳", false}
-	ETH  = Asset{"ETH", "Ξ", false}
-	XETH = Asset{"XETH", "Ξ", false}
-	XBT  = Asset{"XBT", "₿", false}
-	XXBT = Asset{"XXBT", "₿", false}
-	BCH  = Asset{"BCH", "BCH", false}
-	DASH = Asset{"DASH", "DASH", false}
-	EOS  = Asset{"EOS", "EOS", false}
-	GNO  = Asset{"GNO", "GNO", false}
-	LINK = Asset{"LINK", "LINK", false}
-	QTUM = Asset{"QTUM", "QTUM", false}
-	AAVE = Asset{"AAVE", "AAVE", false}
-	USDT = Asset{"USDT", "USDT", false}
-	XETC = Asset{"XETC", "ETC", false}
-	XICN = Asset{"XICN", "ICN", false}
-	XLTC = Asset{"XLTC", "Ł", false}
-	XMLN = Asset{"XMLN", "MLN", false}
-	XREP = Asset{"XREP", "REP", false}
-	XTZ  = Asset{"XTZ", "TZ", false}
-	XXDG = Asset{"XXDG", "DOGE", false}
-	XXLM = Asset{"XXLM", "XLM", false}
-	XXMR = Asset{"XXMR", "XMR", false}
-	XXRP = Asset{"XXRP", "XRP", false}
-	XZEC = Asset{"XZEC", "ZEC", false}
+	ADA  = Asset{"ADA", "ADA", "₳", false}
+	ETH  = Asset{"ETH", "XETH", "Ξ", false}
+	XETH = Asset{"XETH", "XETH", "Ξ", false}
+	XBT  = Asset{"XBT", "XXBT", "₿", false}
+	XXBT = Asset{"XXBT", "XXBT", "₿", false}
+	BCH  = Asset{"BCH", "BCH", "BCH", false}
+	DASH = Asset{"DASH", "DASH", "DASH", false}
+	EOS  = Asset{"EOS", "EOS", "EOS", false}
+	GNO  = Asset{"GNO", "GNO", "GNO", false}
+	LINK = Asset{"LINK", "LINK", "LINK", false}
+	QTUM = Asset{"QTUM", "QTUM", "QTUM", false}
+	AAVE = Asset{"AAVE", "AAVE", "AAVE", false}
+	USDT = Asset{"USDT", "USDT", "USDT", false}
+	XETC = Asset{"XETC", "XETC", "ETC", false}
+	XICN = Asset{"XICN", "XICN", "ICN", false}
+	XLTC = Asset{"XLTC", "XLTC", "Ł", false}
+	XMLN = Asset{"XMLN", "XMLN", "MLN", false}
+	XREP = Asset{"XREP", "XREP", "REP", false}
+	XTZ  = Asset{"XTZ", "XTZ", "TZ", false}
+	XXDG = Asset{"XXDG", "XXDG", "DOGE", false}
+	XXLM = Asset{"XXLM", "XXLM", "XLM", false}
+	XXMR = Asset{"XXMR", "XXMR", "XMR", false}
+	XXRP = Asset{"XXRP", "XXRP", "XRP", false}
+	XZEC = Asset{"XZEC", "XZEC", "ZEC", false}
 
-	EUR  = Asset{"EUR", "€", true}
-	ZEUR = Asset{"ZEUR", "€", true}
-	USD  = Asset{"USD", "$", true}
-	ZUSD = Asset{"ZUSD", "$", true}
-	CAD  = Asset{"CAD", "$", true}
-	ZCAD = Asset{"ZCAD", "$", true}
-	GBP  = Asset{"GBP", "£", true}
-	ZGBP = Asset{"GBP", "£", true}
-	ZJPY = Asset{"ZJPY", "¥", true}
+	EUR  = Asset{"EUR", "ZEUR", "€", true}
+	ZEUR = Asset{"ZEUR", "ZEUR", "€", true}
+	USD  = Asset{"USD", "ZUSD", "$", true}
+	ZUSD = Asset{"ZUSD", "ZUSD", "$", true}
+	CAD  = Asset{"CAD", "ZCAD", "$", true}
+	ZCAD = Asset{"ZCAD", "ZCAD", "$", true}
+	GBP  = Asset{"GBP", "ZGBP", "£", true}
+	ZGBP = Asset{"ZGBP", "ZGBP", "£", true}
+	ZJPY = Asset{"ZJPY", "ZJPY", "¥", true}
 )
 
 var Pairs = map[string]Pair{

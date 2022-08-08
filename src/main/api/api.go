@@ -150,7 +150,7 @@ func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apim
 
 	for asset, amount := range totalToPurchase {
 		balanceInCurrency := reflect.ValueOf(*balance).
-			FieldByName(asset.Name).
+			FieldByName(asset.NormalisedName).
 			Interface().(float64)
 
 		balanceData = append(balanceData, apimodel.BalanceData{
