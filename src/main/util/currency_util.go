@@ -11,9 +11,8 @@ func FormatAsset(asset model.Asset, amount float64) string {
 	if asset.IsFiat {
 		return fmt.Sprintf("%s%s", asset.Symbol, FormatCurrency(amount))
 	} else {
-		return fmt.Sprintf("%s%s", FormatCurrency(amount), asset.Symbol)
+		return fmt.Sprintf("%s%s", FormatFloat(amount, 8), asset.Symbol)
 	}
-
 }
 
 func FormatCurrency(amount float64) string {
