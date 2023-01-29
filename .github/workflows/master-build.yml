@@ -3,8 +3,6 @@ name: Go
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
 
@@ -29,9 +27,6 @@ jobs:
 
     - name: Build
       run: make cross-build
-
-    - name: Package
-      run: make package
 
     - name: Release
       run: make release
