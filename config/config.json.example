@@ -1,0 +1,19 @@
+{
+  "schedules": [
+    {
+      "cron":  "00 11 * * *",
+      "pair": "XXBTZEUR",
+      "amount": 6.00
+    },
+    {
+      "cron":  "00 11 * * 1",
+      "pair": "XETHZEUR",
+      "amount": 37
+    },
+    {
+      "cron":  "00 11 * * *",
+      "pair": "ADAEUR",
+      "amount": 6.00
+    }
+  ]
+}
