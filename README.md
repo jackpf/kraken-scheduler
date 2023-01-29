@@ -47,6 +47,8 @@ Example configuration:
 
 ```json
 {
+  "key": "your kraken API key",
+  "secret": "your kraken API secret",
   "schedules": [
     {
       "cron":  "00 12 * * 1",
@@ -77,7 +79,7 @@ Here is a detailed explanation of each schedule parameter:
 Run with:
 
 ```shell
-kraken-scheduler --key KEY --secret SECRET --config CONFIG [--email-credentials CREDENTIALS] [--telegram-credentials] [--live]
+kraken-scheduler --config CONFIG [--email-credentials CREDENTIALS] [--telegram-credentials] [--live]
 ```
 
 Note that by default the application runs in test mode, and doesn't create real orders.
@@ -87,6 +89,37 @@ This is useful to validate that you've configured things correctly, and the purc
 To place real orders, you must pass `--live` when running.
 
 Run `kraken-scheduler --help` for a description of all arguments.
+
+## Running with Docker
+
+Kraken Scheduler is published to [DockerHub](https://hub.docker.com/r/jackpfarrelly/kraken-scheduler).
+
+It's also cross-compiled to support running on different hardware, such as Raspberry Pis.
+
+To run using docker, simply create a directory to contain your config files (assumed to be called `"config"` in the examples),
+and create `docker-compose.yaml` like the following:
+
+```yaml
+version: "3.8"
+services:
+  kraken-scheduler:
+    image: jackpfarrelly/kraken-scheduler:latest
+    volumes:
+    - ./config:/config
+    entrypoint: >
+      kraken-scheduler
+        --config ${CONFIG:-"/config/config.json"}
+        --telegram-credentials ${TELEGRAM_CREDENTIALS:-""}
+        --email-credentials ${EMAIL_CREDENTIALS:-""}
+        --live
+    restart: on-failure
+```
+
+Then run with `docker compose up`.
+
+To set the telegram credentials argument for example (assuming the `telegram-credentials.json` file exists in your `./config` directory):
+
+`TELEGRAM_CREDENTIALS=/config/telegram-credentials.json docker compose up`
 
 ## Telegram Notifications
 
