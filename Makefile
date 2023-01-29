@@ -24,11 +24,16 @@ cross-build:
 	POSTFIX=-macos-amd64 BUILD_VARS="GOOS=darwin GOARCH=amd64" $(MAKE) build
 	POSTFIX=-macos-arm64 BUILD_VARS="GOOS=darwin GOARCH=arm64" $(MAKE) build
 	POSTFIX=-linux-amd64 BUILD_VARS="GOOS=linux GOARCH=amd64" $(MAKE) build
+	POSTFIX=-linux-arm BUILD_VARS="GOOS=linux GOARCH=arm" $(MAKE) build
+	POSTFIX=-linux-arm64 BUILD_VARS="GOOS=linux GOARCH=arm64" $(MAKE) build
+
+BUILDX=docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
 
 .PHONY: package
 package:
-	docker build -t jackpfarrelly/kraken-scheduler:latest .
+	docker buildx create --use
+	$(BUILDX) -t jackpfarrelly/kraken-scheduler:latest .
 
 .PHONY: release
 release:
-	docker push jackpfarrelly/kraken-scheduler:latest
+	$(BUILDX) -t jackpfarrelly/kraken-scheduler:latest --push .
