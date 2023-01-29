@@ -9,6 +9,8 @@ import (
 
 func TestParseConfigValid(t *testing.T) {
 	configuration := []byte(`{
+  "key": "api-key",
+  "secret": "api-secret",
   "schedules": [
     {
       "cron":  "* * * * *",
@@ -22,6 +24,8 @@ func TestParseConfigValid(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	assert.Equal(t, "api-key", config.Key)
+	assert.Equal(t, "api-secret", config.Secret)
 	assert.Len(t, config.Schedules, 1)
 	assert.Equal(t, "* * * * *", config.Schedules[0].Cron)
 	assert.Equal(t, configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, config.Schedules[0].Pair)

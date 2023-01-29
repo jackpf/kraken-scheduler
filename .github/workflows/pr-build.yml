@@ -1,8 +1,6 @@
 name: Go
 
 on:
-  push:
-    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
@@ -20,6 +18,3 @@ jobs:
 
     - name: Test
       run: make test
-
-    - name: Build
-      run: make build

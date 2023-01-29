@@ -16,9 +16,7 @@ import (
 
 func main() {
 	var args struct {
-		Key                     string `arg:"required" help:"Your Kraken API key"`
-		Secret                  string `arg:"required" help:"Your Kraken secret key"`
-		ConfigFile              string `arg:"--config,required" help:"Schedule configuration file"`
+		ConfigFile              string `arg:"--config,required" help:"Scheduler configuration file"`
 		EmailCredentialsFile    string `arg:"--email-credentials" help:"Your google OAuth email-credentials.json file (optional)"`
 		TelegramCredentialsFile string `arg:"--telegram-credentials" help:"Your telegram ChatID and Token telegram-credentials.json file (optional)"`
 		IsLive                  bool   `arg:"--live" default:"false" help:"Set to true to execute real orders"`
@@ -35,7 +33,7 @@ func main() {
 		log.Warn("Running in test mode, run with --live to submit real orders")
 	}
 
-	krakenAPI := krakenapi.New(args.Key, args.Secret)
+	krakenAPI := krakenapi.New(appConfig.Key, appConfig.Secret)
 	var notifiers []*notifier.Notifier
 
 	if args.EmailCredentialsFile != "" {
