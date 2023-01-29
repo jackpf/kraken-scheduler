@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   kraken-scheduler:
-    image: kraken-scheduler:latest
+    image: jackpfarrelly/kraken-scheduler:latest
     volumes:
     - ./config:/config
     entrypoint: >

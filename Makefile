@@ -26,5 +26,9 @@ cross-build:
 	POSTFIX=-linux-amd64 BUILD_VARS="GOOS=linux GOARCH=amd64" $(MAKE) build
 
 .PHONY: package
-package: cross-build
-	docker build -t kraken-scheduler:latest .
+package:
+	docker build -t jackpfarrelly/kraken-scheduler:latest .
+
+.PHONY: release
+release:
+	docker push jackpfarrelly/kraken-scheduler:latest
