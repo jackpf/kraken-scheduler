@@ -130,7 +130,7 @@ To fix, I had to run the following:
 
 ```shell
 sudo sh -c 'echo "\ndeb http://raspbian.raspberrypi.org/raspbian/ testing main" >> /etc/apt/sources.list'
-sudo apt install -y libseccomp2/testing
+sudo apt update && sudo apt install -y libseccomp2/testing
 ```
 
 It's advised to run in test mode (without `--live`) first to make sure things work correctly.
