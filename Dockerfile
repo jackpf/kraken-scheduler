@@ -1,4 +1,5 @@
 FROM debian:bookworm-slim AS base
+RUN apt update && apt install -y --reinstall ca-certificates
 RUN mkdir -p /app/bin
 
 FROM base AS build_amd64
