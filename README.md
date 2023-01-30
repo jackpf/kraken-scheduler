@@ -121,6 +121,20 @@ To set the telegram credentials argument for example (assuming the `telegram-cre
 
 `TELEGRAM_CREDENTIALS=/config/telegram-credentials.json docker compose up`
 
+### Important Notes for Raspberry Pi
+
+Due to a bug in libseccomp2, docker containers don't have the correct date on the Raspberry Pi.
+This causes scheduling not to work, and buys will happen at incorrect times.
+
+To fix, I had to run the following:
+
+```shell
+sudo sh -c 'echo "\ndeb http://raspbian.raspberrypi.org/raspbian/ testing main" >> /etc/apt/sources.list'
+sudo apt update && sudo apt install -y libseccomp2/testing
+```
+
+It's advised to run in test mode (without `--live`) first to make sure things work correctly.
+
 ## Telegram Notifications
 
 To recieve telegram notifications every time there is an order, follow these steps:
