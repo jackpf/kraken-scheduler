@@ -20,4 +20,4 @@ jobs:
       run: make test
 
     - name: Package
-      run: make package
+      run: make cross-compile package
