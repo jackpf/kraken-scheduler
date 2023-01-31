@@ -4,7 +4,7 @@
 
 Build status:
 
-![build status](https://github.com/jackpf/kraken-scheduler/actions/workflows/go.yml/badge.svg)
+![build status](https://github.com/jackpf/kraken-scheduler/actions/workflows/master-build.yml/badge.svg)
 
 
 Tired of manually buying crypto every month? Every week? Every day?!
