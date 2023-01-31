@@ -1,5 +1,7 @@
 FROM debian:bookworm-slim AS base
-RUN apt update && apt install -y --reinstall ca-certificates
+RUN apt update
+RUN apt install -y --reinstall ca-certificates
+RUN apt install -y tzdata
 RUN mkdir -p /app/bin
 
 FROM base AS build_amd64
