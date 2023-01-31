@@ -106,6 +106,8 @@ services:
     image: jackpfarrelly/kraken-scheduler:latest
     volumes:
     - ./config:/config
+    environment:
+    - TZ=Europe/Berlin # Replace with your timezone
     entrypoint: >
       kraken-scheduler
         --config ${CONFIG:-"/config/config.json"}
@@ -119,7 +121,14 @@ Then run with `docker compose up`.
 
 To set the telegram credentials argument for example (assuming the `telegram-credentials.json` file exists in your `./config` directory):
 
-`TELEGRAM_CREDENTIALS=/config/telegram-credentials.json docker compose up`
+`TELEGRAM_CREDENTIALS=/config/telegram-credentials.json docker compose up`.
+
+### Notes on logs
+
+In order to not get a full replay of the logs (where it looks like the timer is counting down super quick),
+make sure to use `--tail 0` when tailing logs.
+
+E.g. `docker logs --tail 0 -f <container_id>`.
 
 ### Important Notes for Raspberry Pi
 
