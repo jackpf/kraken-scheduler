@@ -19,5 +19,8 @@ jobs:
     - name: Test
       run: make test
 
+    - name: Build
+      run: make cross-build
+
     - name: Package
       run: make package
