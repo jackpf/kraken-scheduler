@@ -109,3 +109,39 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 	assert.Len(t, errs, 1)
 	assert.Errorf(t, errs[0], "mock error")
 }
+
+func TestCheckOrderStatusTask_Notifications_IfHoldingsRequestFails(t *testing.T) {
+	api := new(testutil.MockApi)
+	task := NewCheckOrderStatusTask(api)
+	taskData := model.TaskData{
+		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
+		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
+		TransactionIds: []string{"1"},
+	}
+
+	mockCompletedOrder1 := krakenapi.Order{TransactionID: "1"}
+	var mockHoldings *float64 = nil
+
+	api.On("IsLive").Return(false)
+	api.On("IsVerbose").Return(true)
+	api.On("TransactionStatus", "1").Return(&mockCompletedOrder1, nil)
+	api.On("CheckHoldings", configmodel.XXBT).Return(mockHoldings, fmt.Errorf("mock error"))
+
+	result, errs := task.Notifications(taskData)
+
+	assert.Equal(t, []notifications.Notification{
+		notifications.NewPurchaseNotification(
+			configmodel.Pair{configmodel.XXBT, configmodel.ZEUR},
+			taskData.Order.Amount(),
+			123.0,
+			"1",
+			mockCompletedOrder1,
+			500,
+			0.0,
+			true,
+		),
+	}, result)
+
+	assert.Len(t, errs, 1)
+	assert.Errorf(t, errs[0], "mock error")
+}
