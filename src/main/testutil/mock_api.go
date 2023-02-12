@@ -32,12 +32,22 @@ func (m *MockApi) TransactionStatus(transactionId string) (*krakenapi.Order, err
 	return argsCalled.Get(0).(*krakenapi.Order), argsCalled.Error(1)
 }
 
+func (m *MockApi) CheckHoldings(asset configmodel.Asset) (*float64, error) {
+	argsCalled := m.Called(asset)
+	return argsCalled.Get(0).(*float64), argsCalled.Error(1)
+}
+
 func (m *MockApi) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error) {
 	argsCalled := m.Called(balanceRequests)
 	return argsCalled.Get(0).([]apimodel.BalanceData), argsCalled.Error(1)
 }
 
 func (m *MockApi) IsLive() bool {
+	argsCalled := m.Called()
+	return argsCalled.Bool(0)
+}
+
+func (m *MockApi) IsVerbose() bool {
 	argsCalled := m.Called()
 	return argsCalled.Bool(0)
 }

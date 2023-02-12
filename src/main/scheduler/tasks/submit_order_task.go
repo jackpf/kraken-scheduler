@@ -49,6 +49,10 @@ func (t SubmitOrderTask) Run(taskData *model.TaskData) error {
 }
 
 func (t SubmitOrderTask) Notifications(taskData model.TaskData) ([]notifications.Notification, []error) {
+	if !t.api.IsVerbose() {
+		return nil, nil
+	}
+
 	return []notifications.Notification{notifications.NewOrderNotification(
 		t.api.IsLive(),
 		taskData.Order.Pair,

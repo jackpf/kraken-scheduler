@@ -32,7 +32,7 @@ func (suite *ApiTestSuite) SetupTest() {
 	retry.DefaultDelay = 0 * time.Second
 
 	suite.krakenAPI = new(testutil.MockKrakenApi)
-	suite.api = NewApi(configmodel.Config{"", "", []configmodel.Schedule{}}, true, suite.krakenAPI)
+	suite.api = NewApi(configmodel.Config{"", "", []configmodel.Schedule{}}, true, true, suite.krakenAPI)
 }
 
 func (suite *ApiTestSuite) TestApi_CreateOrder() {
@@ -67,7 +67,7 @@ func (suite *ApiTestSuite) TestApi_SubmitOrder() {
 }
 
 func (suite *ApiTestSuite) TestApi_SubmitOrder_NotLive() {
-	suite.api = NewApi(configmodel.Config{"", "", []configmodel.Schedule{}}, false, suite.krakenAPI)
+	suite.api = NewApi(configmodel.Config{"", "", []configmodel.Schedule{}}, false, true, suite.krakenAPI)
 
 	order := model.NewOrder(configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, 123.0, 246.0)
 	transactionIds := []string{"1", "2"}

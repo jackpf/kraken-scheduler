@@ -17,14 +17,17 @@ type Api interface {
 	CreateOrder(pair configmodel.Pair, fiatAmount float64) (*model.Order, error)
 	SubmitOrder(order model.Order) ([]string, error)
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
+	CheckHoldings(asset configmodel.Asset) (*float64, error)
 	CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error)
 	IsLive() bool
+	IsVerbose() bool
 }
 
-func NewApi(appConfig configmodel.Config, live bool, krakenAPI KrakenApiInterface) Api {
+func NewApi(appConfig configmodel.Config, live bool, verbose bool, krakenAPI KrakenApiInterface) Api {
 	return &ApiImpl{
 		config:    appConfig,
 		live:      live,
+		verbose:   verbose,
 		krakenAPI: krakenAPI,
 	}
 }
@@ -32,6 +35,7 @@ func NewApi(appConfig configmodel.Config, live bool, krakenAPI KrakenApiInterfac
 type ApiImpl struct {
 	config    configmodel.Config
 	live      bool
+	verbose   bool
 	krakenAPI KrakenApiInterface
 }
 
@@ -127,6 +131,26 @@ func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, erro
 	}
 }
 
+func (a ApiImpl) CheckHoldings(asset configmodel.Asset) (*float64, error) {
+	var balance *krakenapi.BalanceResponse
+
+	if err := retry.Do(func() error {
+		var err error
+		if balance, err = a.krakenAPI.Balance(); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("unable to check balance: %s", err.Error())
+	}
+
+	assetBalance := reflect.ValueOf(*balance).
+		FieldByName(asset.NormalisedName).
+		Interface().(float64)
+
+	return &assetBalance, nil
+}
+
 func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error) {
 	var balance *krakenapi.BalanceResponse
 
@@ -165,4 +189,8 @@ func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apim
 
 func (a ApiImpl) IsLive() bool {
 	return a.live
+}
+
+func (a ApiImpl) IsVerbose() bool {
+	return a.verbose
 }

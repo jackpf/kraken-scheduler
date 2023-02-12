@@ -36,12 +36,22 @@ func (t CheckOrderStatusTask) Notifications(taskData model.TaskData) ([]notifica
 			if completedOrder != nil {
 				log.Infof("Order %s was successfully completed", transactionId)
 
+				holdings, err := t.api.CheckHoldings(taskData.Order.Pair.First)
+				if err != nil {
+					errs = append(errs, err)
+					defaultHoldings := 0.0
+					holdings = &defaultHoldings
+				}
+
 				notification := notifications.NewPurchaseNotification(
 					taskData.Order.Pair,
 					taskData.Order.Amount(),
 					taskData.Order.FiatAmount,
 					transactionId,
 					*completedOrder,
+					taskData.Order.Price,
+					*holdings,
+					t.api.IsVerbose(),
 				)
 
 				notificationsList = append(notificationsList, notification)

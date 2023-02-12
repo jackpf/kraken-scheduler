@@ -31,13 +31,13 @@ func (n OrderNotification) Subject() string {
 func (n OrderNotification) Body() string {
 	return fmt.Sprintf(`Transaction ID: %s.
 
-Placed an order for %s, at a cost of %s.
-Current asset price: %s = %s.
+Order: %s for %s
+Asset price: %s
 
 Purchase confirmation should arrive shortly, if not - check the application logs!`,
 		strings.Join(n.transactionIds[:], ", "),
 		util.FormatAsset(n.pair.First, n.amount),
 		util.FormatAsset(n.pair.Second, n.orderPrice),
-		n.pair.First.Name,
-		util.FormatAsset(n.pair.Second, n.assetPrice))
+		util.FormatAsset(n.pair.Second, n.assetPrice),
+	)
 }

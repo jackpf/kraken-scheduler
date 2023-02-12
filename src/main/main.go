@@ -19,6 +19,7 @@ func main() {
 		ConfigFile              string `arg:"--config,required" help:"Scheduler configuration file"`
 		EmailCredentialsFile    string `arg:"--email-credentials" help:"Your google OAuth email-credentials.json file (optional)"`
 		TelegramCredentialsFile string `arg:"--telegram-credentials" help:"Your telegram ChatID and Token telegram-credentials.json file (optional)"`
+		IsVerbose               bool   `arg:"--verbose" help:"Sends more detailed notifications (order submissions, order logs etc.)"`
 		IsLive                  bool   `arg:"--live" default:"false" help:"Set to true to execute real orders"`
 	}
 	arg.MustParse(&args)
@@ -50,7 +51,7 @@ func main() {
 		log.Warn("--telegram-credentials not set, telegram notifications are disabled")
 	}
 
-	apiInstance := api.NewApi(*appConfig, args.IsLive, krakenAPI)
+	apiInstance := api.NewApi(*appConfig, args.IsLive, args.IsVerbose, krakenAPI)
 	schedulerInstance := scheduler.NewScheduler(*appConfig, apiInstance, notifiers)
 
 	retry.DefaultAttempts = 10
