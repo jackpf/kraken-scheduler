@@ -17,6 +17,7 @@ type Api interface {
 	CreateOrder(pair configmodel.Pair, fiatAmount float64) (*model.Order, error)
 	SubmitOrder(order model.Order) ([]string, error)
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
+	CheckHoldings(asset configmodel.Asset) (*float64, error)
 	CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error)
 	IsLive() bool
 	IsVerbose() bool
@@ -128,6 +129,26 @@ func (a ApiImpl) TransactionStatus(transactionId string) (*krakenapi.Order, erro
 	} else {
 		return nil, fmt.Errorf("transaction %s could not be found in open or closed order history", transactionId)
 	}
+}
+
+func (a ApiImpl) CheckHoldings(asset configmodel.Asset) (*float64, error) {
+	var balance *krakenapi.BalanceResponse
+
+	if err := retry.Do(func() error {
+		var err error
+		if balance, err = a.krakenAPI.Balance(); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("unable to check balance: %s", err.Error())
+	}
+
+	assetBalance := reflect.ValueOf(*balance).
+		FieldByName(asset.NormalisedName).
+		Interface().(float64)
+
+	return &assetBalance, nil
 }
 
 func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error) {

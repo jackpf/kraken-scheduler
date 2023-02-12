@@ -39,6 +39,7 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 	}
 
 	api.On("IsLive").Return(false)
+	api.On("IsVerbose").Return(true)
 
 	result, errs := task.Notifications(taskData)
 
