@@ -19,12 +19,14 @@ type Api interface {
 	TransactionStatus(transactionId string) (*krakenapi.Order, error)
 	CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apimodel.BalanceData, error)
 	IsLive() bool
+	IsVerbose() bool
 }
 
-func NewApi(appConfig configmodel.Config, live bool, krakenAPI KrakenApiInterface) Api {
+func NewApi(appConfig configmodel.Config, live bool, verbose bool, krakenAPI KrakenApiInterface) Api {
 	return &ApiImpl{
 		config:    appConfig,
 		live:      live,
+		verbose:   verbose,
 		krakenAPI: krakenAPI,
 	}
 }
@@ -32,6 +34,7 @@ func NewApi(appConfig configmodel.Config, live bool, krakenAPI KrakenApiInterfac
 type ApiImpl struct {
 	config    configmodel.Config
 	live      bool
+	verbose   bool
 	krakenAPI KrakenApiInterface
 }
 
@@ -165,4 +168,8 @@ func (a ApiImpl) CheckBalance(balanceRequests []apimodel.BalanceRequest) ([]apim
 
 func (a ApiImpl) IsLive() bool {
 	return a.live
+}
+
+func (a ApiImpl) IsVerbose() bool {
+	return a.verbose
 }

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/jackpf/kraken-scheduler/src/main/api"
+	apimodel "github.com/jackpf/kraken-scheduler/src/main/api/model"
 	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	log "github.com/sirupsen/logrus"
@@ -36,12 +37,20 @@ func (t CheckOrderStatusTask) Notifications(taskData model.TaskData) ([]notifica
 			if completedOrder != nil {
 				log.Infof("Order %s was successfully completed", transactionId)
 
+				balanceInfo, err := t.api.CheckBalance([]apimodel.BalanceRequest{{Pair: taskData.Order.Pair, Amount: taskData.Order.Amount()}})
+				if err != nil {
+					errs = append(errs, err)
+					break
+				}
+
 				notification := notifications.NewPurchaseNotification(
 					taskData.Order.Pair,
 					taskData.Order.Amount(),
 					taskData.Order.FiatAmount,
 					transactionId,
 					*completedOrder,
+					balanceInfo[0],
+					t.api.IsVerbose(),
 				)
 
 				notificationsList = append(notificationsList, notification)
