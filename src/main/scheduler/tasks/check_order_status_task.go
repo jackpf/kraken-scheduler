@@ -39,7 +39,8 @@ func (t CheckOrderStatusTask) Notifications(taskData model.TaskData) ([]notifica
 				holdings, err := t.api.CheckHoldings(taskData.Order.Pair.First)
 				if err != nil {
 					errs = append(errs, err)
-					break
+					defaultHoldings := 0.0
+					holdings = &defaultHoldings
 				}
 
 				notification := notifications.NewPurchaseNotification(
