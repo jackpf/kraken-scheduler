@@ -14,7 +14,8 @@ import (
 
 func TestCheckBalanceTask_Run(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckBalanceTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckBalanceTask(api, metrics)
 	schedule := configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}}
 	jobs := []struct {
 		configmodel.Schedule
@@ -25,6 +26,7 @@ func TestCheckBalanceTask_Run(t *testing.T) {
 	balanceInfo := []apimodel.BalanceData{{Asset: configmodel.ZEUR, NextPurchaseAmount: 123.0, Balance: 456.0}}
 
 	api.On("CheckBalance", []apimodel.BalanceRequest{{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Amount: 123.0}}).Return(balanceInfo, nil)
+	metrics.On("LogCurrencyBalance", configmodel.ZEUR, 456.0).Return()
 
 	err := task.Run(&taskData)
 
@@ -34,7 +36,8 @@ func TestCheckBalanceTask_Run(t *testing.T) {
 
 func TestCheckBalanceTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckBalanceTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckBalanceTask(api, metrics)
 	taskData := model.TaskData{BalanceData: []apimodel.BalanceData{
 		{Asset: configmodel.ZUSD, NextPurchaseAmount: 100.0, Balance: 150.0},
 		{Asset: configmodel.ZEUR, NextPurchaseAmount: 100.0, Balance: 149.99},

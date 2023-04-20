@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"fmt"
+	"github.com/jackpf/kraken-scheduler/src/main/metrics"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/tasks"
 	"sync"
 	"sync/atomic"
@@ -24,16 +25,17 @@ import (
 	configmodel "github.com/jackpf/kraken-scheduler/src/main/config/model"
 )
 
-func NewScheduler(appConfig configmodel.Config, api api.Api, notifiers []*notifier.Notifier) Scheduler {
+func NewScheduler(appConfig configmodel.Config, metrics metrics.Metrics, api api.Api, notifiers []*notifier.Notifier) Scheduler {
 	return Scheduler{
-		config: appConfig,
-		api:    api,
-		cron:   gocron.NewScheduler(time.Now().Location()),
+		config:  appConfig,
+		metrics: metrics,
+		api:     api,
+		cron:    gocron.NewScheduler(time.Now().Location()),
 		tasks: []tasks.Task{
 			tasks.NewCreateOrderTask(api),
-			tasks.NewSubmitOrderTask(api),
-			tasks.NewCheckOrderStatusTask(api),
-			tasks.NewCheckBalanceTask(api),
+			tasks.NewSubmitOrderTask(api, metrics),
+			tasks.NewCheckOrderStatusTask(api, metrics),
+			tasks.NewCheckBalanceTask(api, metrics),
 			tasks.NewLogNextPurchaseTask(),
 		},
 		notifiers: notifiers,
@@ -42,6 +44,7 @@ func NewScheduler(appConfig configmodel.Config, api api.Api, notifiers []*notifi
 
 type Scheduler struct {
 	config    configmodel.Config
+	metrics   metrics.Metrics
 	api       api.Api
 	cron      *gocron.Scheduler
 	tasks     []tasks.Task
@@ -102,12 +105,14 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 		if err != nil {
 			log.Errorf("Purchase failed: %s", err.Error())
 			s.notifyError(taskData, err)
+			s.metrics.LogError()
 			break
 		}
 
 		notifications, errs := task.Notifications(taskData)
 		for _, err := range errs {
 			s.logErrors(s.notifyError(taskData, err))
+			s.metrics.LogError()
 		}
 		for _, notification := range notifications {
 			s.logErrors(s.notify(notification))

@@ -108,6 +108,10 @@ services:
     - ./config:/config
     environment:
     - TZ=Europe/Berlin # Replace with your timezone
+    expose:
+    - 2112 # Prometheus metrics port
+    ports:
+    - 2112:2112 # Prometheus metrics port
     entrypoint: >
       kraken-scheduler
         --config ${CONFIG:-"/config/config.json"}

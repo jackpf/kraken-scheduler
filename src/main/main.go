@@ -4,6 +4,7 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/jackpf/kraken-scheduler/src/main/api"
 	"github.com/jackpf/kraken-scheduler/src/main/config"
+	"github.com/jackpf/kraken-scheduler/src/main/metrics"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -52,7 +53,7 @@ func main() {
 	}
 
 	apiInstance := api.NewApi(*appConfig, args.IsLive, args.IsVerbose, krakenAPI)
-	schedulerInstance := scheduler.NewScheduler(*appConfig, apiInstance, notifiers)
+	schedulerInstance := scheduler.NewScheduler(*appConfig, metrics.NewMetrics(), apiInstance, notifiers)
 
 	retry.DefaultAttempts = 10
 	retry.DefaultDelay = 1 * time.Second
@@ -61,5 +62,6 @@ func main() {
 		log.Warnf("Retryable call failed (attempt %d): %s", n+1, err.Error())
 	}
 
+	go metrics.Start()
 	schedulerInstance.Run()
 }

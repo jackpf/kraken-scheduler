@@ -13,7 +13,8 @@ import (
 
 func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckOrderStatusTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckOrderStatusTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -29,6 +30,7 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	api.On("TransactionStatus", "1").Return(&mockCompletedOrder1, nil)
 	api.On("TransactionStatus", "2").Return(&mockCompletedOrder2, nil)
 	api.On("CheckHoldings", configmodel.XXBT).Return(&mockHoldings, nil)
+	metrics.On("LogPurchase", taskData.Order.Pair, 0.246, 123.0, mockHoldings).Return()
 
 	result, errs := task.Notifications(taskData)
 
@@ -62,7 +64,8 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 
 func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckOrderStatusTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckOrderStatusTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -80,6 +83,7 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 	api.On("TransactionStatus", "2").Return(&mockCompletedOrder2, fmt.Errorf("mock error"))
 	api.On("TransactionStatus", "3").Return(&mockCompletedOrder3, nil)
 	api.On("CheckHoldings", configmodel.XXBT).Return(&mockHoldings, nil)
+	metrics.On("LogPurchase", taskData.Order.Pair, 0.246, 123.0, mockHoldings).Return()
 
 	result, errs := task.Notifications(taskData)
 
@@ -112,7 +116,8 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 
 func TestCheckOrderStatusTask_Notifications_IfHoldingsRequestFails(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckOrderStatusTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckOrderStatusTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -126,6 +131,7 @@ func TestCheckOrderStatusTask_Notifications_IfHoldingsRequestFails(t *testing.T)
 	api.On("IsVerbose").Return(true)
 	api.On("TransactionStatus", "1").Return(&mockCompletedOrder1, nil)
 	api.On("CheckHoldings", configmodel.XXBT).Return(mockHoldings, fmt.Errorf("mock error"))
+	metrics.On("LogPurchase", taskData.Order.Pair, 0.246, 123.0, 0.0).Return()
 
 	result, errs := task.Notifications(taskData)
 
