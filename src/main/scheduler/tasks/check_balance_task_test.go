@@ -14,7 +14,8 @@ import (
 
 func TestCheckBalanceTask_Run(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckBalanceTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckBalanceTask(api, metrics)
 	schedule := configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}}
 	jobs := []struct {
 		configmodel.Schedule
@@ -30,11 +31,14 @@ func TestCheckBalanceTask_Run(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, balanceInfo, taskData.BalanceData)
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }
 
 func TestCheckBalanceTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckBalanceTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckBalanceTask(api, metrics)
 	taskData := model.TaskData{BalanceData: []apimodel.BalanceData{
 		{Asset: configmodel.ZUSD, NextPurchaseAmount: 100.0, Balance: 150.0},
 		{Asset: configmodel.ZEUR, NextPurchaseAmount: 100.0, Balance: 149.99},
@@ -48,4 +52,6 @@ func TestCheckBalanceTask_Notifications(t *testing.T) {
 
 	assert.Len(t, balanceNotifications, 1)
 	assert.Equal(t, notifications.NewLowBalanceNotification(configmodel.ZEUR, 100.0, 149.99), balanceNotifications[0])
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }

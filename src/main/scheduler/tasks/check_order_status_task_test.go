@@ -13,7 +13,8 @@ import (
 
 func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckOrderStatusTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckOrderStatusTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -58,11 +59,14 @@ func TestCheckOrderStatusTask_Notifications(t *testing.T) {
 			true,
 		),
 	}, result)
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }
 
 func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckOrderStatusTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckOrderStatusTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -108,11 +112,14 @@ func TestCheckOrderStatusTask_Notifications_IfSomeFail(t *testing.T) {
 
 	assert.Len(t, errs, 1)
 	assert.Errorf(t, errs[0], "mock error")
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }
 
 func TestCheckOrderStatusTask_Notifications_IfHoldingsRequestFails(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewCheckOrderStatusTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewCheckOrderStatusTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -144,4 +151,6 @@ func TestCheckOrderStatusTask_Notifications_IfHoldingsRequestFails(t *testing.T)
 
 	assert.Len(t, errs, 1)
 	assert.Errorf(t, errs[0], "mock error")
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }

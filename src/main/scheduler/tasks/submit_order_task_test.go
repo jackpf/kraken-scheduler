@@ -12,7 +12,8 @@ import (
 
 func TestSubmitOrderTask_Run(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewSubmitOrderTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewSubmitOrderTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule: configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:    model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -22,16 +23,20 @@ func TestSubmitOrderTask_Run(t *testing.T) {
 
 	api.On("IsLive").Return(false)
 	api.On("SubmitOrder", taskData.Order).Return(mockTransactionIds, nil)
+	metrics.On("LogOrder", taskData.Order.Pair).Return()
 
 	err := task.Run(&taskData)
 
 	assert.NoError(t, err)
 	assert.Equal(t, mockTransactionIds, taskData.TransactionIds)
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }
 
 func TestSubmitOrderTask_Notifications(t *testing.T) {
 	api := new(testutil.MockApi)
-	task := NewSubmitOrderTask(api)
+	metrics := new(testutil.MockMetrics)
+	task := NewSubmitOrderTask(api, metrics)
 	taskData := model.TaskData{
 		Schedule:       configmodel.Schedule{Cron: "***", Amount: 123.0, Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}},
 		Order:          model.Order{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Price: 500.0, FiatAmount: 123.0},
@@ -54,4 +59,6 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 		500.0,
 		[]string{"1", "2"},
 	)}, result)
+	api.AssertExpectations(t)
+	metrics.AssertExpectations(t)
 }

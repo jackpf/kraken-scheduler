@@ -3,6 +3,7 @@ package tasks
 import (
 	"github.com/jackpf/kraken-scheduler/src/main/api"
 	apimodel "github.com/jackpf/kraken-scheduler/src/main/api/model"
+	"github.com/jackpf/kraken-scheduler/src/main/metrics"
 	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	log "github.com/sirupsen/logrus"
@@ -10,12 +11,13 @@ import (
 
 const alertThreshold = 1.5
 
-func NewCheckBalanceTask(api api.Api) CheckBalanceTask {
-	return CheckBalanceTask{api: api}
+func NewCheckBalanceTask(api api.Api, metrics metrics.Metrics) CheckBalanceTask {
+	return CheckBalanceTask{api: api, metrics: metrics}
 }
 
 type CheckBalanceTask struct {
-	api api.Api
+	api     api.Api
+	metrics metrics.Metrics
 }
 
 func (t CheckBalanceTask) Run(taskData *model.TaskData) error {
@@ -30,6 +32,9 @@ func (t CheckBalanceTask) Run(taskData *model.TaskData) error {
 		return err
 	}
 
+	for _, balance := range balanceInfo {
+		t.metrics.LogCurrencyBalance(balance.Asset, balance.Balance)
+	}
 	taskData.BalanceData = balanceInfo
 
 	return nil

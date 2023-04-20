@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/jackpf/kraken-scheduler/src/main/api"
+	"github.com/jackpf/kraken-scheduler/src/main/metrics"
 	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	"github.com/jackpf/kraken-scheduler/src/main/util"
@@ -9,12 +10,13 @@ import (
 	"strings"
 )
 
-func NewSubmitOrderTask(api api.Api) SubmitOrderTask {
-	return SubmitOrderTask{api: api}
+func NewSubmitOrderTask(api api.Api, metrics metrics.Metrics) SubmitOrderTask {
+	return SubmitOrderTask{api: api, metrics: metrics}
 }
 
 type SubmitOrderTask struct {
-	api api.Api
+	api     api.Api
+	metrics metrics.Metrics
 }
 
 func (t SubmitOrderTask) liveLogTag() string {
@@ -43,6 +45,7 @@ func (t SubmitOrderTask) Run(taskData *model.TaskData) error {
 	}
 
 	log.Infof("[%s] Order placed: %s", t.liveLogTag(), transactionIdsString)
+	t.metrics.LogOrder(taskData.Order.Pair)
 
 	taskData.TransactionIds = transactionIds
 	return nil

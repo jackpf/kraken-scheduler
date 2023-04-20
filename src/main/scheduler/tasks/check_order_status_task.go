@@ -2,21 +2,24 @@ package tasks
 
 import (
 	"github.com/jackpf/kraken-scheduler/src/main/api"
+	"github.com/jackpf/kraken-scheduler/src/main/metrics"
 	"github.com/jackpf/kraken-scheduler/src/main/notifications"
 	"github.com/jackpf/kraken-scheduler/src/main/scheduler/model"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
-func NewCheckOrderStatusTask(api api.Api) CheckOrderStatusTask {
-	return CheckOrderStatusTask{api: api}
+func NewCheckOrderStatusTask(api api.Api, metrics metrics.Metrics) CheckOrderStatusTask {
+	return CheckOrderStatusTask{api: api, metrics: metrics}
 }
 
 type CheckOrderStatusTask struct {
-	api api.Api
+	api     api.Api
+	metrics metrics.Metrics
 }
 
 func (t CheckOrderStatusTask) Run(taskData *model.TaskData) error {
+	// TODO We should really perform requests here and append completed orders to task data, rather than doing it all in `Notifications`
 	return nil
 }
 
@@ -53,6 +56,7 @@ func (t CheckOrderStatusTask) Notifications(taskData model.TaskData) ([]notifica
 					*holdings,
 					t.api.IsVerbose(),
 				)
+				t.metrics.LogPurchase(taskData.Order.Pair, taskData.Order.Amount(), taskData.Order.FiatAmount, *holdings)
 
 				notificationsList = append(notificationsList, notification)
 
