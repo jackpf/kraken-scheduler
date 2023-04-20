@@ -116,7 +116,6 @@ func (s *Scheduler) process(schedule configmodel.Schedule) {
 		}
 		for _, notification := range notifications {
 			s.logErrors(s.notify(notification))
-			s.metrics.LogError()
 		}
 	}
 
