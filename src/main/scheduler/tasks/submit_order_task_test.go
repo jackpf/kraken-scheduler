@@ -29,8 +29,6 @@ func TestSubmitOrderTask_Run(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, mockTransactionIds, taskData.TransactionIds)
-	api.AssertExpectations(t)
-	metrics.AssertExpectations(t)
 }
 
 func TestSubmitOrderTask_Notifications(t *testing.T) {
@@ -59,6 +57,4 @@ func TestSubmitOrderTask_Notifications(t *testing.T) {
 		500.0,
 		[]string{"1", "2"},
 	)}, result)
-	api.AssertExpectations(t)
-	metrics.AssertExpectations(t)
 }

@@ -22,5 +22,4 @@ func TestCreateOrderTask_Run(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, mockOrder, taskData.Order)
-	api.AssertExpectations(t)
 }

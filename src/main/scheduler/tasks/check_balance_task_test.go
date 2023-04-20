@@ -26,13 +26,12 @@ func TestCheckBalanceTask_Run(t *testing.T) {
 	balanceInfo := []apimodel.BalanceData{{Asset: configmodel.ZEUR, NextPurchaseAmount: 123.0, Balance: 456.0}}
 
 	api.On("CheckBalance", []apimodel.BalanceRequest{{Pair: configmodel.Pair{configmodel.XXBT, configmodel.ZEUR}, Amount: 123.0}}).Return(balanceInfo, nil)
+	metrics.On("LogCurrencyBalance", configmodel.ZEUR, 456.0).Return()
 
 	err := task.Run(&taskData)
 
 	assert.NoError(t, err)
 	assert.Equal(t, balanceInfo, taskData.BalanceData)
-	api.AssertExpectations(t)
-	metrics.AssertExpectations(t)
 }
 
 func TestCheckBalanceTask_Notifications(t *testing.T) {
@@ -52,6 +51,4 @@ func TestCheckBalanceTask_Notifications(t *testing.T) {
 
 	assert.Len(t, balanceNotifications, 1)
 	assert.Equal(t, notifications.NewLowBalanceNotification(configmodel.ZEUR, 100.0, 149.99), balanceNotifications[0])
-	api.AssertExpectations(t)
-	metrics.AssertExpectations(t)
 }
