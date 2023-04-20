@@ -20,3 +20,7 @@ func (m *MockMetrics) LogPurchase(pair model.Pair, amount float64, fiatAmount fl
 func (m *MockMetrics) LogCurrencyBalance(asset model.Asset, holdings float64) {
 	m.Called(asset, holdings)
 }
+
+func (m *MockMetrics) LogError() {
+	m.Called()
+}
