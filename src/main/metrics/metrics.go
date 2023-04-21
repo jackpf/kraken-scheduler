@@ -28,6 +28,10 @@ func NewMetrics() Metrics {
 			Name: "kraken_scheduler_asset_balance_amount",
 			Help: "How much of an asset currently exists on the account",
 		}, []string{"asset"}),
+		assetBalanceValueGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
+			Name: "kraken_scheduler_asset_balance_value",
+			Help: "How much value of an asset exists on the account",
+		}, []string{"asset"}),
 		currencyBalanceAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_currency_balance_amount",
 			Help: "How much of a currency currently exists on the account",
@@ -41,7 +45,7 @@ func NewMetrics() Metrics {
 
 type Metrics interface {
 	LogOrder(pair model.Pair)
-	LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64)
+	LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64)
 	LogCurrencyBalance(asset model.Asset, holdings float64)
 	LogError()
 }
@@ -52,6 +56,7 @@ type MetricsImpl struct {
 	assetPurchaseAmountGauge   *prometheus.HistogramVec
 	currencySpendAmountGauge   *prometheus.HistogramVec
 	assetBalanceAmountGauge    *prometheus.HistogramVec
+	assetBalanceValueGauge     *prometheus.HistogramVec
 	currencyBalanceAmountGauge *prometheus.HistogramVec
 	errorsCounter              prometheus.Counter
 }
@@ -60,11 +65,12 @@ func (m *MetricsImpl) LogOrder(pair model.Pair) {
 	m.orderCounter.WithLabelValues(pair.First.Name, pair.Second.Name).Inc()
 }
 
-func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64) {
+func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64) {
 	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.Second.Name).Inc()
 	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name).Observe(amount)
 	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name).Observe(fiatAmount)
 	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name).Observe(holdings)
+	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name).Observe(holdings)
 }
 
 func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {
