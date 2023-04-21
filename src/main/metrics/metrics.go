@@ -11,11 +11,11 @@ func NewMetrics() Metrics {
 		orderCounter: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "kraken_scheduler_orders_total",
 			Help: "The total number of orders made",
-		}, []string{"currency", "asset"}),
+		}, []string{"asset", "currency"}),
 		purchaseCounter: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "kraken_scheduler_purchases_total",
 			Help: "The total number of purchases made",
-		}, []string{"currency", "asset"}),
+		}, []string{"asset", "currency"}),
 		assetPurchaseAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_asset_purchase_amount",
 			Help: "How much of an asset was purchased",
@@ -62,9 +62,9 @@ func (m *MetricsImpl) LogOrder(pair model.Pair) {
 
 func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64) {
 	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.Second.Name).Inc()
-	m.assetPurchaseAmountGauge.WithLabelValues(pair.Second.Name).Observe(amount)
-	m.currencySpendAmountGauge.WithLabelValues(pair.First.Name).Observe(fiatAmount)
-	m.assetBalanceAmountGauge.WithLabelValues(pair.Second.Name).Observe(holdings)
+	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name).Observe(amount)
+	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name).Observe(fiatAmount)
+	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name).Observe(holdings)
 }
 
 func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {
