@@ -11,31 +11,31 @@ func NewMetrics() Metrics {
 		orderCounter: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "kraken_scheduler_orders_total",
 			Help: "The total number of orders made",
-		}, []string{"asset", "currency"}),
+		}, []string{"asset", "asset_symbol", "currency", "currency_symbol"}),
 		purchaseCounter: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "kraken_scheduler_purchases_total",
 			Help: "The total number of purchases made",
-		}, []string{"asset", "currency"}),
+		}, []string{"asset", "asset_symbol", "currency", "currency_symbol"}),
 		assetPurchaseAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_asset_purchase_amount",
 			Help: "How much of an asset was purchased",
-		}, []string{"asset"}),
+		}, []string{"asset", "asset_symbol"}),
 		currencySpendAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_currency_spend_amount",
 			Help: "How much currency was spent on a purchase",
-		}, []string{"currency"}),
+		}, []string{"currency", "currency_symbol"}),
 		assetBalanceAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_asset_balance_amount",
 			Help: "How much of an asset currently exists on the account",
-		}, []string{"asset"}),
+		}, []string{"asset", "asset_symbol"}),
 		assetBalanceValueGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_asset_balance_value",
 			Help: "How much value of an asset exists on the account",
-		}, []string{"asset"}),
+		}, []string{"asset", "asset_symbol"}),
 		currencyBalanceAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_currency_balance_amount",
 			Help: "How much of a currency currently exists on the account",
-		}, []string{"currency"}),
+		}, []string{"currency", "currency_symbol"}),
 		errorsCounter: promauto.NewCounter(prometheus.CounterOpts{
 			Name: "kraken_scheduler_errors_total",
 			Help: "The total number of errors during purchase process",
@@ -62,19 +62,19 @@ type MetricsImpl struct {
 }
 
 func (m *MetricsImpl) LogOrder(pair model.Pair) {
-	m.orderCounter.WithLabelValues(pair.First.Name, pair.Second.Name).Inc()
+	m.orderCounter.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Inc()
 }
 
 func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64) {
-	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.Second.Name).Inc()
-	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name).Observe(amount)
-	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name).Observe(fiatAmount)
-	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name).Observe(holdings)
-	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name).Observe(holdings)
+	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Inc()
+	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Observe(amount)
+	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name, pair.Second.Symbol).Observe(fiatAmount)
+	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Observe(holdings)
+	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Observe(holdingsValue)
 }
 
 func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {
-	m.currencyBalanceAmountGauge.WithLabelValues(asset.Name).Observe(holdings)
+	m.currencyBalanceAmountGauge.WithLabelValues(asset.Name, asset.Symbol).Observe(holdings)
 }
 
 func (m *MetricsImpl) LogError() {
