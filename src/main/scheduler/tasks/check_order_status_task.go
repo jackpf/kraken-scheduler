@@ -56,7 +56,7 @@ func (t CheckOrderStatusTask) Notifications(taskData model.TaskData) ([]notifica
 					*holdings,
 					t.api.IsVerbose(),
 				)
-				t.metrics.LogPurchase(taskData.Order.Pair, taskData.Order.Amount(), taskData.Order.FiatAmount, *holdings)
+				t.metrics.LogPurchase(taskData.Order.Pair, taskData.Order.Amount(), taskData.Order.FiatAmount, *holdings, *holdings*taskData.Order.Price)
 
 				notificationsList = append(notificationsList, notification)
 
