@@ -16,19 +16,19 @@ func NewMetrics() Metrics {
 			Name: "kraken_scheduler_purchases_total",
 			Help: "The total number of purchases made",
 		}, []string{"asset", "asset_symbol", "currency", "currency_symbol"}),
-		assetPurchaseAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		assetPurchaseAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_asset_purchase_amount",
 			Help: "How much of an asset was purchased",
 		}, []string{"asset", "asset_symbol"}),
-		currencySpendAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		currencySpendAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_currency_spend_amount",
 			Help: "How much currency was spent on a purchase",
 		}, []string{"currency", "currency_symbol"}),
-		assetBalanceAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		assetBalanceAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_asset_balance_amount",
 			Help: "How much of an asset currently exists on the account",
 		}, []string{"asset", "asset_symbol"}),
-		assetBalanceValueGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		assetBalanceValueGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_asset_balance_value",
 			Help: "How much value of an asset exists on the account",
 		}, []string{"asset", "asset_symbol"}),
@@ -53,10 +53,10 @@ type Metrics interface {
 type MetricsImpl struct {
 	orderCounter               *prometheus.CounterVec
 	purchaseCounter            *prometheus.CounterVec
-	assetPurchaseAmountGauge   *prometheus.HistogramVec
-	currencySpendAmountGauge   *prometheus.HistogramVec
-	assetBalanceAmountGauge    *prometheus.HistogramVec
-	assetBalanceValueGauge     *prometheus.HistogramVec
+	assetPurchaseAmountGauge   *prometheus.GaugeVec
+	currencySpendAmountGauge   *prometheus.GaugeVec
+	assetBalanceAmountGauge    *prometheus.GaugeVec
+	assetBalanceValueGauge     *prometheus.GaugeVec
 	currencyBalanceAmountGauge *prometheus.GaugeVec
 	errorsCounter              prometheus.Counter
 }
@@ -67,10 +67,10 @@ func (m *MetricsImpl) LogOrder(pair model.Pair) {
 
 func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64) {
 	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Inc()
-	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Observe(amount)
-	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name, pair.Second.Symbol).Observe(fiatAmount)
-	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Observe(holdings)
-	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Observe(holdingsValue)
+	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(amount)
+	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name, pair.Second.Symbol).Set(fiatAmount)
+	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(holdings)
+	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(holdingsValue)
 }
 
 func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {
