@@ -32,7 +32,7 @@ func NewMetrics() Metrics {
 			Name: "kraken_scheduler_asset_balance_value",
 			Help: "How much value of an asset exists on the account",
 		}, []string{"asset", "asset_symbol"}),
-		currencyBalanceAmountGauge: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		currencyBalanceAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_currency_balance_amount",
 			Help: "How much of a currency currently exists on the account",
 		}, []string{"currency", "currency_symbol"}),
@@ -57,7 +57,7 @@ type MetricsImpl struct {
 	currencySpendAmountGauge   *prometheus.HistogramVec
 	assetBalanceAmountGauge    *prometheus.HistogramVec
 	assetBalanceValueGauge     *prometheus.HistogramVec
-	currencyBalanceAmountGauge *prometheus.HistogramVec
+	currencyBalanceAmountGauge *prometheus.GaugeVec
 	errorsCounter              prometheus.Counter
 }
 
@@ -74,7 +74,7 @@ func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount fl
 }
 
 func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {
-	m.currencyBalanceAmountGauge.WithLabelValues(asset.Name, asset.Symbol).Observe(holdings)
+	m.currencyBalanceAmountGauge.WithLabelValues(asset.Name, asset.Symbol).Set(holdings)
 }
 
 func (m *MetricsImpl) LogError() {
