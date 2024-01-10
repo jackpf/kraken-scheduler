@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/jackpf/kraken-scheduler/src/main/api"
 	"github.com/jackpf/kraken-scheduler/src/main/config"
@@ -59,7 +60,11 @@ func main() {
 	retry.DefaultDelay = 60 * time.Second
 	retry.DefaultDelayType = retry.BackOffDelay
 	retry.DefaultOnRetry = func(n uint, err error) {
-		log.Warnf("Retryable call failed (attempt %d): %s", n+1, err.Error())
+		subject := fmt.Sprintf("Retryable call failed (attempt %d)", n+1)
+		log.Warnf("%s: %s", subject, err.Error())
+		for _, n := range notifiers {
+			_ = (*n).Send(subject, err.Error())
+		}
 	}
 
 	go metrics.Start()
