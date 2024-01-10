@@ -55,7 +55,7 @@ func main() {
 	apiInstance := api.NewApi(*appConfig, args.IsLive, args.IsVerbose, krakenAPI)
 	schedulerInstance := scheduler.NewScheduler(*appConfig, metrics.NewMetrics(), apiInstance, notifiers)
 
-	retry.DefaultAttempts = 10
+	retry.DefaultAttempts = 11
 	retry.DefaultDelay = 60 * time.Second
 	retry.DefaultDelayType = retry.BackOffDelay
 	retry.DefaultOnRetry = func(n uint, err error) {
