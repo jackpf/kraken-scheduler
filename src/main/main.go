@@ -54,7 +54,8 @@ func main() {
 	}
 
 	apiInstance := api.NewApi(*appConfig, args.IsLive, args.IsVerbose, krakenAPI)
-	schedulerInstance := scheduler.NewScheduler(*appConfig, metrics.NewMetrics(), apiInstance, notifiers)
+	apiMetrics := metrics.NewMetrics()
+	schedulerInstance := scheduler.NewScheduler(*appConfig, apiMetrics, apiInstance, notifiers)
 
 	retry.DefaultAttempts = 11
 	retry.DefaultDelay = 60 * time.Second
@@ -62,6 +63,9 @@ func main() {
 	retry.DefaultOnRetry = func(n uint, err error) {
 		subject := fmt.Sprintf("Retryable call failed (attempt %d)", n+1)
 		log.Warnf("%s: %s", subject, err.Error())
+
+		apiMetrics.LogRetry()
+
 		for _, n := range notifiers {
 			_ = (*n).Send(subject, err.Error())
 		}

@@ -48,6 +48,10 @@ func NewMetrics() Metrics {
 			Name: "kraken_scheduler_errors_total",
 			Help: "The total number of errors during purchase process",
 		}),
+		retriesCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Name: "kraken_scheduler_errors_total",
+			Help: "The total number of errors during purchase process",
+		}),
 	}
 }
 
@@ -56,6 +60,7 @@ type Metrics interface {
 	LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64)
 	LogCurrencyBalance(asset model.Asset, holdings float64)
 	LogError()
+	LogRetry()
 }
 
 type MetricsImpl struct {
@@ -69,6 +74,7 @@ type MetricsImpl struct {
 	assetBalanceValueGauge       *prometheus.GaugeVec
 	currencyBalanceAmountGauge   *prometheus.GaugeVec
 	errorsCounter                prometheus.Counter
+	retriesCounter               prometheus.Counter
 }
 
 func (m *MetricsImpl) LogOrder(pair model.Pair) {
@@ -91,4 +97,8 @@ func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {
 
 func (m *MetricsImpl) LogError() {
 	m.errorsCounter.Inc()
+}
+
+func (m *MetricsImpl) LogRetry() {
+	m.retriesCounter.Inc()
 }
