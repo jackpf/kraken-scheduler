@@ -56,7 +56,7 @@ func main() {
 	schedulerInstance := scheduler.NewScheduler(*appConfig, metrics.NewMetrics(), apiInstance, notifiers)
 
 	retry.DefaultAttempts = 10
-	retry.DefaultDelay = 1 * time.Second
+	retry.DefaultDelay = 60 * time.Second
 	retry.DefaultDelayType = retry.BackOffDelay
 	retry.DefaultOnRetry = func(n uint, err error) {
 		log.Warnf("Retryable call failed (attempt %d): %s", n+1, err.Error())
