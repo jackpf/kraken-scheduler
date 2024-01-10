@@ -49,8 +49,8 @@ func NewMetrics() Metrics {
 			Help: "The total number of errors during purchase process",
 		}),
 		retriesCounter: promauto.NewCounter(prometheus.CounterOpts{
-			Name: "kraken_scheduler_errors_total",
-			Help: "The total number of errors during purchase process",
+			Name: "kraken_scheduler_retries_total",
+			Help: "The total number of retries during purchase process",
 		}),
 	}
 }
