@@ -24,3 +24,7 @@ func (m *MockMetrics) LogCurrencyBalance(asset model.Asset, holdings float64) {
 func (m *MockMetrics) LogError() {
 	m.Called()
 }
+
+func (m *MockMetrics) LogRetry() {
+	m.Called()
+}
