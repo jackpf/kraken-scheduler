@@ -19,19 +19,19 @@ func NewMetrics() Metrics {
 			Name: "kraken_scheduler_purchases_total",
 			Help: "The total number of purchases made",
 		}, append(currencyLabels, assetLabels...)),
-		assetPurchaseAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+		purchaseAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_purchase_amount",
 			Help: "How much of an asset was purchased",
 		}, append(currencyLabels, assetLabels...)),
-		assetPurchaseAmountHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		purchaseAmountHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_purchase_amount_history",
 			Help: "How much of an asset was purchased",
 		}, append(currencyLabels, assetLabels...)),
-		currencySpendAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+		spendAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_spend_amount",
 			Help: "How much currency was spent on a purchase",
 		}, append(currencyLabels, assetLabels...)),
-		currencySpendAmountHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
+		spendAmountHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_spend_amount_history",
 			Help: "How much currency was spent on a purchase",
 		}, append(currencyLabels, assetLabels...)),
@@ -67,17 +67,17 @@ type Metrics interface {
 }
 
 type MetricsImpl struct {
-	orderCounter                 *prometheus.CounterVec
-	purchaseCounter              *prometheus.CounterVec
-	assetPurchaseAmountGauge     *prometheus.GaugeVec
-	assetPurchaseAmountHistogram *prometheus.HistogramVec
-	currencySpendAmountGauge     *prometheus.GaugeVec
-	currencySpendAmountHistogram *prometheus.HistogramVec
-	assetBalanceAmountGauge      *prometheus.GaugeVec
-	assetBalanceValueGauge       *prometheus.GaugeVec
-	currencyBalanceAmountGauge   *prometheus.GaugeVec
-	errorsCounter                prometheus.Counter
-	retriesCounter               prometheus.Counter
+	orderCounter               *prometheus.CounterVec
+	purchaseCounter            *prometheus.CounterVec
+	purchaseAmountGauge        *prometheus.GaugeVec
+	purchaseAmountHistogram    *prometheus.HistogramVec
+	spendAmountGauge           *prometheus.GaugeVec
+	spendAmountHistogram       *prometheus.HistogramVec
+	assetBalanceAmountGauge    *prometheus.GaugeVec
+	assetBalanceValueGauge     *prometheus.GaugeVec
+	currencyBalanceAmountGauge *prometheus.GaugeVec
+	errorsCounter              prometheus.Counter
+	retriesCounter             prometheus.Counter
 }
 
 func (m *MetricsImpl) LogOrder(pair model.Pair) {
@@ -86,10 +86,10 @@ func (m *MetricsImpl) LogOrder(pair model.Pair) {
 
 func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64) {
 	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Inc()
-	m.assetPurchaseAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Set(amount)
-	m.assetPurchaseAmountHistogram.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Observe(amount)
-	m.currencySpendAmountGauge.WithLabelValues(pair.Second.Name, pair.Second.Symbol, pair.Second.Name, pair.Second.Symbol).Set(fiatAmount)
-	m.currencySpendAmountHistogram.WithLabelValues(pair.Second.Name, pair.Second.Symbol, pair.Second.Name, pair.Second.Symbol).Observe(fiatAmount)
+	m.purchaseAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Set(amount)
+	m.purchaseAmountHistogram.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Observe(amount)
+	m.spendAmountGauge.WithLabelValues(pair.Second.Name, pair.Second.Symbol, pair.Second.Name, pair.Second.Symbol).Set(fiatAmount)
+	m.spendAmountHistogram.WithLabelValues(pair.Second.Name, pair.Second.Symbol, pair.Second.Name, pair.Second.Symbol).Observe(fiatAmount)
 	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(holdings)
 	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(holdingsValue)
 }
