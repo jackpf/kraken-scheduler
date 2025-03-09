@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"github.com/jackpf/kraken-scheduler/src/main/config/model"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -14,27 +15,27 @@ func NewMetrics() Metrics {
 		orderCounter: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "kraken_scheduler_orders_total",
 			Help: "The total number of orders made",
-		}, append(currencyLabels, assetLabels...)),
+		}, append(assetLabels, currencyLabels...)),
 		purchaseCounter: promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "kraken_scheduler_purchases_total",
 			Help: "The total number of purchases made",
-		}, append(currencyLabels, assetLabels...)),
+		}, append(assetLabels, currencyLabels...)),
 		purchaseAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_purchase_amount",
 			Help: "How much of an asset was purchased",
-		}, append(currencyLabels, assetLabels...)),
+		}, append(assetLabels, currencyLabels...)),
 		purchaseAmountHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_purchase_amount_history",
 			Help: "How much of an asset was purchased",
-		}, append(currencyLabels, assetLabels...)),
+		}, append(assetLabels, currencyLabels...)),
 		spendAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_spend_amount",
 			Help: "How much currency was spent on a purchase",
-		}, append(currencyLabels, assetLabels...)),
+		}, append(assetLabels, currencyLabels...)),
 		spendAmountHistogram: promauto.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "kraken_scheduler_spend_amount_history",
 			Help: "How much currency was spent on a purchase",
-		}, append(currencyLabels, assetLabels...)),
+		}, append(assetLabels, currencyLabels...)),
 		assetBalanceAmountGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "kraken_scheduler_asset_balance_amount",
 			Help: "How much of an asset currently exists on the account",
@@ -80,18 +81,31 @@ type MetricsImpl struct {
 	retriesCounter             prometheus.Counter
 }
 
+func pairToAssetLabels(pair model.Pair) []string {
+	return []string{pair.First.Name, pair.First.Symbol}
+}
+
+func pairToCurrencyLabels(pair model.Pair) []string {
+	return []string{pair.Second.Name, pair.Second.Symbol}
+}
+
+func pairToAssetAndCurrencyLabels(pair model.Pair) []string {
+	return append(pairToAssetLabels(pair), pairToCurrencyLabels(pair)...)
+}
+
 func (m *MetricsImpl) LogOrder(pair model.Pair) {
-	m.orderCounter.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Inc()
+	fmt.Printf("Logging order, first: %s, second: %s", pair.First.Name, pair.Second.Name)
+	m.orderCounter.WithLabelValues(pairToAssetAndCurrencyLabels(pair)...).Inc()
 }
 
 func (m *MetricsImpl) LogPurchase(pair model.Pair, amount float64, fiatAmount float64, holdings float64, holdingsValue float64) {
-	m.purchaseCounter.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Inc()
-	m.purchaseAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Set(amount)
-	m.purchaseAmountHistogram.WithLabelValues(pair.First.Name, pair.First.Symbol, pair.Second.Name, pair.Second.Symbol).Observe(amount)
-	m.spendAmountGauge.WithLabelValues(pair.Second.Name, pair.Second.Symbol, pair.Second.Name, pair.Second.Symbol).Set(fiatAmount)
-	m.spendAmountHistogram.WithLabelValues(pair.Second.Name, pair.Second.Symbol, pair.Second.Name, pair.Second.Symbol).Observe(fiatAmount)
-	m.assetBalanceAmountGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(holdings)
-	m.assetBalanceValueGauge.WithLabelValues(pair.First.Name, pair.First.Symbol).Set(holdingsValue)
+	m.purchaseCounter.WithLabelValues(pairToAssetAndCurrencyLabels(pair)...).Inc()
+	m.purchaseAmountGauge.WithLabelValues(pairToAssetAndCurrencyLabels(pair)...).Set(amount)
+	m.purchaseAmountHistogram.WithLabelValues(pairToAssetAndCurrencyLabels(pair)...).Observe(amount)
+	m.spendAmountGauge.WithLabelValues(pairToAssetAndCurrencyLabels(pair)...).Set(fiatAmount)
+	m.spendAmountHistogram.WithLabelValues(pairToAssetAndCurrencyLabels(pair)...).Observe(fiatAmount)
+	m.assetBalanceAmountGauge.WithLabelValues(pairToAssetLabels(pair)...).Set(holdings)
+	m.assetBalanceValueGauge.WithLabelValues(pairToAssetLabels(pair)...).Set(holdingsValue)
 }
 
 func (m *MetricsImpl) LogCurrencyBalance(asset model.Asset, holdings float64) {

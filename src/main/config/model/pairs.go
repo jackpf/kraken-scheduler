@@ -13,7 +13,9 @@ type Asset struct {
 }
 
 type Pair struct {
-	First  Asset
+	// What are we buying
+	First Asset
+	// What are we buying it with
 	Second Asset
 }
 
